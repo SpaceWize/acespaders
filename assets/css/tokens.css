@@ -16,21 +16,30 @@
      A warm near-black ramp — the darks carry a brown cast rather than going
      blue, which is what keeps it feeling like leather and asphalt instead of
      default-dark-mode. Amber is the one bright thing on the page. */
-  --ink-900: #080808;   /* page ground — brand black */
-  --ink-800: #121010;   /* raised surface: cards, stuck header */
-  --ink-700: #1c1919;   /* hover surface */
-  --ink-600: #282626;   /* hairline borders — brand charcoal */
+  --ink-900: #1b1c1f;   /* page ground */
+  --ink-800: #141518;   /* recessed surface: panels behind media */
+  --ink-700: #24262a;   /* raised surface: cards, stuck header */
+  --ink-600: #32353a;   /* hover surface / hairline borders */
   --ink-500: #423737;   /* warm brown, for washes and dividers */
 
   --bone-100: #f5f5f5;  /* primary text */
   --bone-300: #c8c8c8;  /* secondary text */
-  --bone-500: #8d8d8d;  /* muted / captions */
+  --bone-500: #9a9a9a;  /* muted / captions */
 
-  --gold-400: #ffc02e;  /* accent highlight */
-  --gold-500: #f9a700;  /* accent base — the brand amber */
+  /* Three accents, as on the original: gold for the mark, cyan for
+     structure and interactive edges, red for frames and the SPADERS
+     lettering. Gold stays the primary — the other two are used on the
+     hero and the paths, where the original is at its loudest. */
+  --gold-400: #ffc93c;  /* accent highlight */
+  --gold-500: #f5b301;  /* accent base — the brand gold */
   --gold-600: #b87a00;  /* accent shadow */
 
-  --red-500: #b30505;   /* alert / crisis accent */
+  --cyan-400: #67e8f9;  /* highlight */
+  --cyan-500: #22d3ee;  /* borders, path cards, "Let's Talk" */
+  --cyan-600: #0e91ab;  /* shadow */
+
+  --red-500: #e5342b;   /* SPADERS lettering, media frames */
+  --red-600: #c81e1e;
   --red-700: #8b0000;
 
   /* Semantic aliases — components reference these, never the raw ramp. */
@@ -43,6 +52,9 @@
   --accent: var(--gold-500);
   --accent-bright: var(--gold-400);
   --accent-deep: var(--gold-600);
+  --edge: var(--cyan-500);        /* interactive edges, path borders */
+  --edge-bright: var(--cyan-400);
+  --frame: var(--red-500);        /* media frames, SPADERS */
   --alert: var(--red-500);
   --rule: color-mix(in oklab, var(--gold-500) 30%, transparent);
   --rule-faint: color-mix(in oklab, var(--bone-100) 10%, transparent);

@@ -59,6 +59,55 @@ The nav differs slightly per page: on `index.html` the Home/About/Contact links
 are bare anchors (`#about`); on the two path pages they are prefixed
 (`index.html#about`) so they still resolve.
 
+### The animated hero
+
+The home page opens on a two-panel hero rebuilt from the original. Six things
+move:
+
+| Piece | How it works |
+|---|---|
+| **Water** | `.water` — a blurred multi-stop gradient drifting sideways while its hue rotates, blended `color-dodge` over the photo. Opacity is deliberately low (0.24); above ~0.25 `color-dodge` blows out a real photograph instead of shimmering on it. |
+| **Moon** | `.moon__disc` spins on a 48s loop. The whole moon is a link to `#paths`. |
+| **Miner** | `.moon__miner` bobs; `.moon__pickaxe` is a **separate layer** that swings from the handle, so it needs its own image. Both share a 1.1s cycle — the miner dips as the axe comes down. |
+| **ACE / SPADERS** | Drifts toward the cursor. SPADERS also tilts toward it, which gives the pair parallax rather than moving as one rigid block. |
+| **Let's Talk / In The Truck** | Shifts toward the cursor. "In The Truck" carries a sheen — a narrow highlight sweeping across a mostly-red gradient, clipped to the glyphs. |
+| **Start Here** | Pulses on a 2.4s loop; the pulse pauses on hover. |
+
+**How the cursor tracking works.** `main.js` writes two custom properties on
+the hero — `--mx` and `--my`, each running −1 to 1 from the centre. Every
+moving piece reads those in CSS. The script knows nothing about which
+elements move or how far, so to retune the amount of movement you edit CSS,
+not JavaScript:
+
+```css
+.hero-mark { transform: translate3d(calc(var(--mx) * 14px), calc(var(--my) * 10px), 0); }
+.hero-mark__spaders { transform: rotate(calc(var(--mx) * 3.2deg)) ... }
+```
+
+Tracking is skipped entirely on touch screens (no cursor to follow) and when
+reduced motion is requested. In both cases the properties stay at 0 and
+everything simply sits still — the layout is identical either way.
+
+### Photographs the hero needs
+
+All the slots are built and correctly sized; each is a one-line swap. Drop an
+`<img>` into the slot and delete its `data-placeholder` attribute.
+
+| File | Where | Notes |
+|---|---|---|
+| `assets/img/hero-truck.jpg` | left panel | the truck / water shot |
+| `assets/img/hero-city.jpg` | right panel | the city-at-night shot |
+| `assets/img/moon.png` | `.moon__disc` | square, transparent edges; it rotates, so anything off-centre will wobble |
+| `assets/img/miner.png` | `.moon__miner` | transparent PNG, **without** the pickaxe |
+| `assets/img/pickaxe.png` | `.moon__pickaxe` | transparent PNG, separate so it can swing |
+| `assets/img/path-cybertruck.jpg` | paths | square |
+| `assets/img/path-advisor.jpg` | paths | square |
+
+The miner and pickaxe being separate files is what makes the swing possible.
+If you only have them as one combined image, put it in `miner.png`, leave
+`pickaxe.png` out, and the miner will bob without swinging — still animated,
+just less specific.
+
 ### Adding the Cybertruck photograph
 
 The slot is already built in `cybertruck.html`, sized to the original

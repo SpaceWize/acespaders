@@ -6,10 +6,412 @@
    layout.
    ========================================================================== */
 
-/* ---- Home hero ----------------------------------------------------------
-   Full-height opener carrying the stacked ACE / SPADERS wordmark, as on the
-   original site. The mark is set at --step-mark, which runs deliberately
-   larger than the body type scale — it is a logo, not a heading. */
+/* ==========================================================================
+   SPLIT HERO
+   A rebuild of the original two-panel opener: truck-and-water on the left
+   with the spinning moon and the ACE / SPADERS mark, city-at-night on the
+   right with "Let's Talk / In The Truck", and "Start Here" straddling the
+   seam between them.
+
+   Cursor reactions are driven by two custom properties that JS writes on
+   the hero — --mx and --my, each running -1 to 1 from the centre. CSS does
+   all the actual movement, so if JS never loads the values fall back to 0
+   and everything simply sits still.
+   ========================================================================== */
+
+.hero-split {
+  position: relative;
+  padding-block: calc(var(--header-h) + var(--space-l)) var(--space-xl);
+}
+
+/* The red frame around the whole composition, as on the original. */
+.hero-frame {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--frame);
+  background: var(--ink-800);
+}
+
+.hero-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: clamp(22rem, 16rem + 26vw, 34rem);
+}
+
+/* Below 44rem the two panels stack, so the seam — and the Start Here button
+   that straddles it — has to stop being a vertical divide.
+
+   The grid's min-height is dropped here and given to the panels instead:
+   left on the grid it would be split between the two stacked panels, making
+   each of them half-height and cramping the lettering. */
+@media (max-width: 44rem) {
+  .hero-panels {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .hero-panel { min-height: 15rem; }
+
+  /* Clear the moon, which sits in this panel's top-right corner. */
+  .hero-panel--left { padding-block-start: var(--space-2xl); }
+
+  /* Clear Start Here, which is pinned to the bottom of the whole frame and
+     therefore lands over this panel once they are stacked. */
+  .hero-panel--right { padding-block-end: var(--space-3xl); }
+}
+
+.hero-panel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: var(--space-l) var(--space-m) var(--space-2xl);
+  isolation: isolate;
+}
+
+.hero-panel + .hero-panel { border-left: 1px solid color-mix(in oklab, var(--frame) 55%, transparent); }
+
+@media (max-width: 44rem) {
+  .hero-panel + .hero-panel {
+    border-left: 0;
+    border-top: 1px solid color-mix(in oklab, var(--frame) 55%, transparent);
+  }
+}
+
+/* Photograph slot. Drop an <img> in and it fills the panel. */
+.hero-panel__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(150deg, var(--ink-600), var(--ink-900) 70%);
+}
+
+.hero-panel__media img { width: 100%; height: 100%; object-fit: cover; }
+
+.hero-panel__media[data-placeholder]::after {
+  content: "\2660";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  color: color-mix(in oklab, var(--gold-500) 14%, transparent);
+}
+
+/* A scrim so the lettering holds up over any photograph. */
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.22) 60%, rgb(0 0 0 / 0.35));
+}
+
+/* ---- Moving water -------------------------------------------------------
+   The rainbow slick on the left panel. A blurred multi-stop gradient drifts
+   sideways while its hue rotates, which reads as oil moving on water over
+   whatever photograph sits underneath. Both properties animate in a single
+   keyframe set — running two animations would have them fight over `filter`.
+   Blend mode does the rest, so it tints the photo rather than covering it. */
+
+.water {
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  /* Kept low deliberately: color-dodge lifts highlights hard, so anything
+     above ~0.25 blows out a real photograph instead of shimmering on it. */
+  opacity: 0.24;
+  mix-blend-mode: color-dodge;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    #1b6ca8 12%,
+    #17b3a3 24%,
+    #8ed36b 36%,
+    #f2c14e 48%,
+    #e2643f 60%,
+    #a34fbf 72%,
+    #2f6fd0 84%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: water-drift 18s linear infinite;
+}
+
+@keyframes water-drift {
+  0%   { background-position:   0% 50%; filter: blur(26px) hue-rotate(0deg); }
+  50%  { background-position: 110% 50%; filter: blur(34px) hue-rotate(180deg); }
+  100% { background-position: 220% 50%; filter: blur(26px) hue-rotate(360deg); }
+}
+
+/* ---- The moon -----------------------------------------------------------
+   Spins slowly, and is a link through to the two paths. The miner rides on
+   top and does NOT spin with the disc — it sits in its own layer so the
+   pickaxe can swing independently. */
+
+.moon {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 6%;
+  inset-inline-end: 7%;
+  width: clamp(5rem, 15%, 11rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+.moon:hover { transform: scale(1.06); filter: drop-shadow(0 0 22px rgb(255 255 255 / 0.35)); }
+
+/* Smaller and tighter into the corner on narrow screens, where the panel is
+   not wide enough to keep it clear of the lettering. */
+@media (max-width: 44rem) {
+  .moon {
+    width: 4.25rem;
+    inset-block-start: 3.5%;
+    inset-inline-end: 4%;
+  }
+}
+
+.moon__disc {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 34% 30%, #d8d8d4, #8f8f8b 45%, #4a4a48 100%);
+  animation: moon-spin 48s linear infinite;
+}
+
+.moon__disc img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+@keyframes moon-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* The miner. Sits above the disc, bobbing very slightly so the swing reads
+   as effort rather than a detached arm. */
+.moon__miner {
+  position: absolute;
+  inset-block-end: 46%;
+  inset-inline-start: 34%;
+  width: 34%;
+  transform-origin: bottom center;
+  animation: miner-bob 1.1s ease-in-out infinite;
+}
+
+.moon__miner img { width: 100%; height: auto; }
+
+@keyframes miner-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50%      { transform: translateY(4%) rotate(1.5deg); }
+}
+
+/* The pickaxe, as its own layer so it can swing from the handle. The timing
+   is deliberately shared with the bob above: the miner dips as the axe
+   comes down. */
+.moon__pickaxe {
+  position: absolute;
+  inset-block-start: -18%;
+  inset-inline-start: 46%;
+  width: 78%;
+  transform-origin: 12% 88%;
+  animation: pickaxe-swing 1.1s ease-in-out infinite;
+}
+
+.moon__pickaxe img { width: 100%; height: auto; }
+
+@keyframes pickaxe-swing {
+  0%   { transform: rotate(-52deg); }
+  55%  { transform: rotate(14deg); }   /* strike */
+  70%  { transform: rotate(6deg); }    /* small rebound off the rock */
+  100% { transform: rotate(-52deg); }
+}
+
+/* ---- ACE / SPADERS mark -------------------------------------------------
+   Drifts toward the cursor. SPADERS additionally tilts toward it, pivoting
+   from its own centre, which is what gives the pair a bit of parallax
+   instead of moving as one rigid block. */
+
+.hero-mark {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  line-height: 0.86;
+  text-transform: uppercase;
+  /* --mx / --my are written by JS; 0 is the resting state. */
+  transform: translate3d(calc(var(--mx, 0) * 14px), calc(var(--my, 0) * 10px), 0);
+  transition: transform 240ms var(--ease-out-soft);
+}
+
+.hero-mark__ace,
+.hero-mark__spaders { display: block; }
+
+.hero-mark__ace {
+  font-size: clamp(2.2rem, 1rem + 5.4vw, 4.6rem);
+  letter-spacing: var(--track-snug);
+  color: var(--gold-500);
+  /* Layered shadow gives the chunky extruded look of the original. */
+  text-shadow:
+    0 1px 0 #a8760a, 0 2px 0 #8d6208, 0 3px 0 #6f4d06,
+    0 4px 0 #543a05, 0 8px 16px rgb(0 0 0 / 0.6);
+}
+
+.hero-mark__spaders {
+  margin-block-start: -0.06em;
+  font-size: clamp(2.6rem, 1rem + 6.8vw, 5.6rem);
+  letter-spacing: -0.035em;
+  color: var(--frame);
+  text-shadow:
+    0 1px 0 #9c1f18, 0 2px 0 #841a14, 0 3px 0 #6b1510,
+    0 4px 0 #52100c, 0 9px 18px rgb(0 0 0 / 0.65);
+  transform: rotate(calc(var(--mx, 0) * 3.2deg)) translate3d(calc(var(--mx, 0) * 10px), 0, 0);
+  transition: transform 300ms var(--ease-out-soft);
+}
+
+/* ---- Let's Talk / In The Truck ------------------------------------------
+   Shifts toward the cursor, and carries a sheen that sweeps across the
+   lettering on a loop. The sheen is a moving gradient clipped to the glyphs
+   via background-clip, so it needs a transparent text colour. */
+
+.hero-talk {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  line-height: 0.94;
+  text-transform: uppercase;
+  transform: translate3d(calc(var(--mx, 0) * 18px), calc(var(--my, 0) * 12px), 0);
+  transition: transform 260ms var(--ease-out-soft);
+}
+
+.hero-talk__lets,
+.hero-talk__truck { display: block; }
+
+.hero-talk__lets {
+  font-size: clamp(1.9rem, 0.8rem + 4.6vw, 3.9rem);
+  letter-spacing: var(--track-snug);
+  color: var(--cyan-500);
+  text-shadow: 0 2px 0 #0b6f85, 0 4px 14px rgb(0 0 0 / 0.6), 0 0 26px rgb(34 211 238 / 0.35);
+}
+
+.hero-talk__truck {
+  margin-block-start: 0.06em;
+  font-size: clamp(1.7rem, 0.7rem + 4.2vw, 3.5rem);
+  font-style: italic;
+  letter-spacing: -0.02em;
+  /* A narrow highlight band on a mostly-red ramp, so the lettering reads red
+     and the shine is a quick sweep across it rather than a constant wash. */
+  background: linear-gradient(
+    100deg,
+    var(--red-600) 0%, var(--red-500) 40%,
+    #ffd98a 47%, #fffaec 50%, #ffd98a 53%,
+    var(--red-500) 60%, var(--red-600) 100%
+  );
+  background-size: 320% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen 4.5s linear infinite;
+  filter: drop-shadow(0 3px 10px rgb(0 0 0 / 0.6));
+}
+
+@keyframes sheen {
+  from { background-position: 280% 50%; }
+  to   { background-position: -60% 50%; }
+}
+
+/* ---- Start Here ---------------------------------------------------------
+   Straddles the seam between the two panels and pulses continuously. */
+
+.start-here {
+  position: absolute;
+  z-index: 3;
+  inset-block-end: clamp(1rem, 0.4rem + 2vw, 2.25rem);
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  padding: 0.85em 2.6em;
+  border: 1px solid color-mix(in oklab, var(--gold-500) 65%, transparent);
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(6px);
+  color: var(--gold-400);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  animation: start-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes start-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(245 179 1 / 0.42), 0 6px 20px rgb(0 0 0 / 0.5);
+    border-color: color-mix(in oklab, var(--gold-500) 65%, transparent);
+  }
+  50% {
+    transform: scale(1.045);
+    box-shadow: 0 0 30px 6px rgb(245 179 1 / 0.16), 0 6px 20px rgb(0 0 0 / 0.5);
+    border-color: var(--gold-400);
+  }
+}
+
+.start-here:hover {
+  color: var(--ink-900);
+  background: var(--gold-500);
+  border-color: var(--gold-400);
+  animation-play-state: paused;
+}
+
+/* ---- Hero tagline -------------------------------------------------------- */
+
+.hero-tagline {
+  max-width: 52rem;
+  margin: var(--space-l) auto 0;
+  text-align: center;
+  font-size: var(--step-0);
+  font-style: italic;
+  color: var(--text-soft);
+}
+
+.hero-tagline strong { color: var(--gold-400); font-style: normal; }
+.hero-tagline em { color: var(--cyan-400); font-style: normal; }
+
+/* ---- Motion preference --------------------------------------------------
+   Everything above is decorative. Switch all of it off rather than merely
+   speeding it up, and drop the cursor reactions to their resting state. */
+
+@media (prefers-reduced-motion: reduce) {
+  .water,
+  .moon__disc,
+  .moon__miner,
+  .moon__pickaxe,
+  .hero-talk__truck,
+  .start-here { animation: none; }
+
+  .hero-mark,
+  .hero-mark__spaders,
+  .hero-talk { transform: none; }
+
+  /* Without the sheen animation the gradient would leave the text
+     transparent, so give it a solid fill back. */
+  .hero-talk__truck {
+    background: none;
+    -webkit-text-fill-color: var(--red-500);
+    color: var(--red-500);
+  }
+}
+
+/* ---- Legacy hero --------------------------------------------------------
+   The earlier single-column hero, kept because the masthead and inner pages
+   still borrow its glow and cue treatments. */
 
 .hero {
   position: relative;
@@ -119,40 +521,62 @@
 }
 
 /* ---- Path cards ---------------------------------------------------------
-   The two routes off the single page: "Let's Talk" (the advisory) and
-   "In The Truck" (on-location). These are the only links on the home page
-   that leave it, so they are given more weight than anything else.
+   The two routes off the single page: Cybertruck and Ace Advisor. Laid out
+   as on the original "Choose Your Path" screen — a red-framed image sitting
+   over a cyan plate carrying the name, with a dash between the pair.
 
-   Built as a whole-card link with a media slot behind a dark scrim, so a
-   photograph can be dropped in later without touching the layout. */
+   They stay side by side down to small screens (the pairing is the point of
+   the section) and only stack when there is genuinely no room. */
 
 .paths {
-  display: grid;
-  gap: var(--space-m);
-  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(var(--space-s), 0.5rem + 3vw, var(--space-2xl));
+}
+
+.paths__dash {
+  flex: none;
+  width: clamp(1rem, 3vw, 2.25rem);
+  height: 2px;
+  margin-block-start: clamp(4rem, 12vw, 8rem);
+  background: var(--bone-100);
 }
 
 .path {
-  position: relative;
+  flex: 1 1 0;
+  max-width: 20rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  min-height: clamp(20rem, 14rem + 22vw, 30rem);
-  padding: clamp(var(--space-m), 0.75rem + 2vw, var(--space-xl));
-  overflow: hidden;
-  border: 1px solid var(--ink-600);
+  align-items: center;
   color: inherit;
-  isolation: isolate;
-  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+  transition: transform var(--dur) var(--ease);
 }
 
-/* Media slot. Drop an <img> in and it fills the card; with no image the
-   gradient below stands in. */
+.path:hover { transform: translateY(-4px); }
+
+/* Red frame around the photograph, pulled down over the plate below so the
+   two overlap the way they do on the original. */
+.path__frame {
+  position: relative;
+  z-index: 1;
+  width: 88%;
+  padding: 3px;
+  border: 2px solid var(--frame);
+  background: var(--ink-900);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.path:hover .path__frame {
+  box-shadow: 0 0 26px -4px color-mix(in oklab, var(--frame) 70%, transparent);
+}
+
 .path__media {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: linear-gradient(150deg, var(--ink-500), var(--ink-900) 70%);
+  display: block;
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--ink-600), var(--ink-900) 70%);
 }
 
 .path__media img {
@@ -162,65 +586,74 @@
   transition: transform var(--dur-slow) var(--ease);
 }
 
-/* Scrim, so the text stays legible over any photograph. */
-.path::before {
-  content: "";
+.path:hover .path__media img { transform: scale(1.06); }
+
+.path__media[data-placeholder]::after {
+  content: "\2660";
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.92) 12%, rgb(0 0 0 / 0.55) 55%, rgb(0 0 0 / 0.25));
-  transition: background var(--dur) var(--ease);
+  display: grid;
+  place-items: center;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  color: color-mix(in oklab, var(--gold-500) 18%, transparent);
 }
 
-.path:hover {
-  border-color: var(--accent);
-  transform: translateY(-3px);
+/* Cyan plate. Sits behind the frame and extends below it to hold the name. */
+.path__plate {
+  width: 100%;
+  /* Slides up behind the frame so the two overlap; the matching top padding
+     puts the text clear of the image again. */
+  margin-block-start: -14%;
+  padding: calc(14% + var(--space-s)) var(--space-s) var(--space-s);
+  border: 2px solid var(--edge);
+  border-radius: 10px;
+  background: var(--ink-800);
+  text-align: center;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 
-.path:hover .path__media img { transform: scale(1.05); }
-
-.path:hover::before {
-  background: linear-gradient(to top, rgb(0 0 0 / 0.88) 12%, rgb(0 0 0 / 0.45) 55%, rgb(0 0 0 / 0.15));
+.path:hover .path__plate {
+  border-color: var(--edge-bright);
+  box-shadow: 0 0 30px -6px color-mix(in oklab, var(--edge) 65%, transparent);
 }
 
-.path__label {
-  font-size: var(--step--1);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-/* A span rather than a heading — the card's name is not a document-outline
-   heading — so the display styling has to be stated explicitly. */
 .path__title {
   display: block;
-  margin-block: var(--space-2xs) var(--space-xs);
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 0.6rem + 1.5vw, 1.5rem);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--edge);
+  transition: color var(--dur) var(--ease);
+}
+
+.path:hover .path__title { color: var(--edge-bright); }
+
+.path__body {
+  display: block;
+  margin-block-start: var(--space-2xs);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+/* Closing line under the pair, as on the original. */
+.paths__note {
+  margin-block-start: var(--space-xl);
+  text-align: center;
   font-family: var(--font-display);
   font-weight: var(--weight-display);
-  font-size: var(--step-3);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--track-tight);
+  font-size: var(--step-2);
+  letter-spacing: var(--track-snug);
   text-transform: uppercase;
   color: var(--text);
 }
 
-.path__body { max-width: 26rem; color: var(--text-soft); }
-
-.path__go {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-block-start: var(--space-m);
-  font-size: var(--step--1);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--track-wide);
-  text-transform: uppercase;
-  color: var(--text);
+@media (max-width: 30rem) {
+  .paths { flex-direction: column; align-items: center; }
+  .paths__dash { margin-block: 0; width: 2.5rem; }
+  .path { max-width: 17rem; width: 100%; }
 }
-
-.path__go-arrow { transition: transform var(--dur) var(--ease); }
-.path:hover .path__go-arrow { transform: translateX(0.4em); }
 
 /* ---- Inner page masthead ------------------------------------------------
    Shared by ace-advisor.html and cybertruck.html so both paths open on the

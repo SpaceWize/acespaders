@@ -281,6 +281,66 @@
   }
 
   /* ------------------------------------------------------------------------
+     Cursor tracking
+     Writes two custom properties on the hero — --mx and --my, each running
+     -1 to 1 from the centre of the element. All the actual movement is done
+     in CSS off those values, so this function knows nothing about which
+     pieces move or how far.
+
+     Skipped entirely on coarse pointers (phones, tablets) where there is no
+     cursor to follow, and when reduced motion is requested.
+     ---------------------------------------------------------------------- */
+
+  function initCursor() {
+    var stage = document.querySelector("[data-cursor-stage]");
+    if (!stage) return;
+
+    if (REDUCED_MOTION.matches) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+    var pending = false;
+    var mx = 0;
+    var my = 0;
+
+    function paint() {
+      stage.style.setProperty("--mx", mx.toFixed(4));
+      stage.style.setProperty("--my", my.toFixed(4));
+      pending = false;
+    }
+
+    // pointermove fires far more often than the screen refreshes, so the
+    // write is deferred to the next frame.
+    function schedule() {
+      if (pending) return;
+      pending = true;
+      window.requestAnimationFrame(paint);
+    }
+
+    stage.addEventListener(
+      "pointermove",
+      function (event) {
+        var box = stage.getBoundingClientRect();
+        if (!box.width || !box.height) return;
+
+        // Normalise to -1..1, then clamp: a pointer can sit slightly
+        // outside the box during fast movement.
+        mx = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width - 0.5) * 2));
+        my = Math.max(-1, Math.min(1, ((event.clientY - box.top) / box.height - 0.5) * 2));
+        schedule();
+      },
+      { passive: true }
+    );
+
+    // Ease back to centre when the pointer leaves, rather than sticking at
+    // whatever the last position was.
+    stage.addEventListener("pointerleave", function () {
+      mx = 0;
+      my = 0;
+      schedule();
+    });
+  }
+
+  /* ------------------------------------------------------------------------
      Contact form
      The form posts to whatever action the markup declares. Until an endpoint
      is wired up it has no action, and we compose a mailto: instead so the
@@ -338,6 +398,7 @@
     initNav();
     initScrollSpy();
     initReveal();
+    initCursor();
     initLightbox();
     initContactForm();
     initYear();

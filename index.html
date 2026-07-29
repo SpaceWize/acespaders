@@ -14,9 +14,9 @@
 <meta property="og:description" content="Discreet high-ticket advisory for business scaling, crisis navigation, on-location scouting and representation. BC and beyond.">
 <meta property="og:url" content="https://www.acespaders.com/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#1b1c1f">
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080808'/%3E%3Ctext x='16' y='25' font-size='24' text-anchor='middle' fill='%23f9a700'%3E%26%239824%3B%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231b1c1f'/%3E%3Ctext x='16' y='25' font-size='24' text-anchor='middle' fill='%23f5b301'%3E%26%239824%3B%3C/text%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,36 +66,74 @@
 
 <main class="page" id="main">
 
-  <!-- ==================== HERO ==================== -->
-  <section class="hero" id="home">
-    <div class="hero__glow" aria-hidden="true"></div>
+  <!-- ==================== SPLIT HERO ====================
+       Two panels inside a red frame, as on the original.
 
-    <div class="shell hero__inner" data-reveal-group>
-      <p class="eyebrow" data-reveal>High-Ticket Advisory &middot; On-Location Scouting</p>
+       PHOTOGRAPH SLOTS — each .hero-panel__media takes one image. Drop an
+       <img> inside, remove the data-placeholder attribute, and the scrim and
+       water layer already sit correctly on top:
 
-      <!-- The stacked wordmark is the page's h1. aria-label gives assistive
-           tech the name as one string rather than two stacked lines. -->
-      <h1 class="hero__mark" aria-label="Ace Spaders" data-reveal>
-        <span class="hero__mark-line hero__mark-line--fill" aria-hidden="true">Ace</span>
-        <span class="hero__mark-line hero__mark-line--outline" aria-hidden="true">Spaders</span>
-      </h1>
+         <span class="hero-panel__media">
+           <img src="assets/img/hero-truck.jpg" alt="" width="1600" height="1200">
+         </span>
 
-      <p class="hero__lede" data-reveal>
-        Discreet high-ticket advisory for business scaling, crisis navigation,
-        on-location scouting and representation. Immersive sessions and
-        boots-on-the-ground work <strong>in BC and beyond</strong>.
-      </p>
+       data-cursor-stage marks the element the cursor is measured against.
+       JS writes --mx / --my on it; every moving piece below reads those in
+       CSS. With JS off, or on a touch screen, they stay at 0 and nothing
+       shifts — the layout is identical either way.
+  -->
+  <section class="hero-split" id="home">
+    <div class="shell">
+      <div class="hero-frame" data-cursor-stage>
+        <div class="hero-panels">
 
-      <div class="btn-row" data-reveal>
-        <a class="btn btn--primary" href="#contact"><span>Let&rsquo;s Talk</span></a>
-        <a class="btn btn--ghost" href="cybertruck.html"><span>In The Truck</span></a>
+          <!-- LEFT: truck, water, moon, the mark -->
+          <div class="hero-panel hero-panel--left">
+            <span class="hero-panel__media" data-placeholder aria-hidden="true"></span>
+            <span class="water" aria-hidden="true"></span>
+
+            <!-- The moon spins, the miner swings a pickaxe, and the whole
+                 thing is a link down to the two paths. -->
+            <a class="moon" href="#paths" aria-label="Choose your path">
+              <span class="moon__disc" aria-hidden="true">
+                <!-- <img src="assets/img/moon.png" alt="" width="400" height="400"> -->
+              </span>
+              <span class="moon__miner" aria-hidden="true">
+                <!-- <img src="assets/img/miner.png" alt="" width="200" height="260"> -->
+                <span class="moon__pickaxe">
+                  <!-- <img src="assets/img/pickaxe.png" alt="" width="160" height="160"> -->
+                </span>
+              </span>
+            </a>
+
+            <h1 class="hero-mark" aria-label="Ace Spaders">
+              <span class="hero-mark__ace" aria-hidden="true">Ace</span>
+              <span class="hero-mark__spaders" aria-hidden="true">Spaders</span>
+            </h1>
+          </div>
+
+          <!-- RIGHT: the city, the invitation -->
+          <div class="hero-panel hero-panel--right">
+            <span class="hero-panel__media" data-placeholder aria-hidden="true"></span>
+
+            <p class="hero-talk">
+              <span class="hero-talk__lets">Let&rsquo;s Talk</span>
+              <span class="hero-talk__truck">In The Truck</span>
+            </p>
+          </div>
+
+        </div>
+
+        <a class="start-here" href="#about">Start Here</a>
       </div>
-    </div>
 
-    <a class="hero__cue" href="#about">
-      <span class="hero__cue-line" aria-hidden="true"></span>
-      <span>Start Here</span>
-    </a>
+      <p class="hero-tagline">
+        <strong>Ace Spaders</strong> offers discreet high-ticket advisory for
+        business scaling, crisis navigation, on-location scouting and
+        representation. Immersive sessions and boots-on-the-ground work
+        <em>in BC and beyond</em>.
+      </p>
+    </div>
   </section>
 
   <!-- ==================== ABOUT ==================== -->
@@ -209,45 +247,46 @@
   </section>
 
   <!-- ==================== THE TWO PATHS ====================
-       The only links on this page that leave it. To add a photograph, drop an
-       <img> inside .path__media — the scrim and hover treatment already
-       account for it. -->
-  <section class="section">
+       The only links on this page that leave it, and where the spinning moon
+       in the hero lands. Order matches the original: Cybertruck, then Ace
+       Advisor.
+
+       PHOTOGRAPH SLOTS — drop an <img> inside each .path__media and remove
+       the data-placeholder attribute. The red frame and cyan plate need no
+       changes.
+  -->
+  <section class="section" id="paths">
     <div class="shell">
       <header class="section-head section-head--center" data-reveal>
         <p class="eyebrow eyebrow--center">03 &mdash; Two ways in</p>
-        <h2>Pick your road</h2>
+        <h2>Choose Your Path</h2>
       </header>
 
       <div class="paths" data-reveal-group>
-        <a class="path" href="ace-advisor.html" data-reveal>
-          <span class="path__media" aria-hidden="true"></span>
-          <span class="path__label">The Advisory</span>
-          <span class="path__title">Ace Advisor</span>
-          <span class="path__body">
-            Retained advisory for scaling, crisis and representation. Terms,
-            availability and how an engagement actually runs.
+        <a class="path" href="cybertruck.html" data-reveal>
+          <span class="path__frame">
+            <span class="path__media" data-placeholder aria-hidden="true"></span>
           </span>
-          <span class="path__go">
-            Let&rsquo;s Talk
-            <span class="path__go-arrow" aria-hidden="true">&rarr;</span>
+          <span class="path__plate">
+            <span class="path__title">Cybertruck</span>
+            <span class="path__body">Scouting, immersive sessions, boots on the ground.</span>
           </span>
         </a>
 
-        <a class="path" href="cybertruck.html" data-reveal>
-          <span class="path__media" aria-hidden="true"></span>
-          <span class="path__label">On Location</span>
-          <span class="path__title">In The Truck</span>
-          <span class="path__body">
-            Scouting, immersive sessions and boots-on-the-ground work across BC
-            and beyond &mdash; run out of the truck.
+        <span class="paths__dash" aria-hidden="true"></span>
+
+        <a class="path" href="ace-advisor.html" data-reveal>
+          <span class="path__frame">
+            <span class="path__media" data-placeholder aria-hidden="true"></span>
           </span>
-          <span class="path__go">
-            Take the ride
-            <span class="path__go-arrow" aria-hidden="true">&rarr;</span>
+          <span class="path__plate">
+            <span class="path__title">Ace Advisor</span>
+            <span class="path__body">Scaling, crisis navigation, representation.</span>
           </span>
         </a>
       </div>
+
+      <p class="paths__note" data-reveal>Paths May Intersect</p>
     </div>
   </section>
 
