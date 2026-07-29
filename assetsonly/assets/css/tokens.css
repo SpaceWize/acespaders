@@ -1,0 +1,148 @@
+/* ==========================================================================
+   TOKENS
+   The single source of truth for colour, type, spacing and motion.
+   Nothing in this file draws anything — it only declares values.
+   Change a brand colour or the type scale here and the whole site follows.
+
+   Palette and type are lifted from the existing Wix site so the rebuild
+   keeps the same feeling:
+     #080808  page black        #282626 / #423737  warm charcoal + brown
+     #F9A700  signature amber   #8B0000 / #B30505  deep red
+     Montserrat Black display, Inter body
+   ========================================================================== */
+
+:root {
+  /* ---- Colour ------------------------------------------------------------
+     A warm near-black ramp — the darks carry a brown cast rather than going
+     blue, which is what keeps it feeling like leather and asphalt instead of
+     default-dark-mode. Amber is the one bright thing on the page. */
+  --ink-900: #080808;   /* page ground — brand black */
+  --ink-800: #121010;   /* raised surface: cards, stuck header */
+  --ink-700: #1c1919;   /* hover surface */
+  --ink-600: #282626;   /* hairline borders — brand charcoal */
+  --ink-500: #423737;   /* warm brown, for washes and dividers */
+
+  --bone-100: #f5f5f5;  /* primary text */
+  --bone-300: #c8c8c8;  /* secondary text */
+  --bone-500: #8d8d8d;  /* muted / captions */
+
+  --gold-400: #ffc02e;  /* accent highlight */
+  --gold-500: #f9a700;  /* accent base — the brand amber */
+  --gold-600: #b87a00;  /* accent shadow */
+
+  --red-500: #b30505;   /* alert / crisis accent */
+  --red-700: #8b0000;
+
+  /* Semantic aliases — components reference these, never the raw ramp. */
+  --bg: var(--ink-900);
+  --bg-raised: var(--ink-800);
+  --bg-hover: var(--ink-700);
+  --text: var(--bone-100);
+  --text-soft: var(--bone-300);
+  --text-muted: var(--bone-500);
+  --accent: var(--gold-500);
+  --accent-bright: var(--gold-400);
+  --accent-deep: var(--gold-600);
+  --alert: var(--red-500);
+  --rule: color-mix(in oklab, var(--gold-500) 30%, transparent);
+  --rule-faint: color-mix(in oklab, var(--bone-100) 10%, transparent);
+
+  /* ---- Type --------------------------------------------------------------
+     Two families. Montserrat at its heaviest weight carries the display —
+     the original site sets the ACE / SPADERS wordmark in Montserrat Black,
+     and that industrial weight is most of the brand's character. Inter does
+     the reading and takes wide tracking for small-caps labels.
+
+     Note: the Wix site also uses "midnight-terror" for some display text.
+     That face is licensed through Wix and cannot be served from a static
+     host, so Montserrat Black carries the display voice instead and the
+     roughness comes from texture rather than the letterforms. */
+  --font-display: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+
+  --weight-display: 900;
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-semi: 600;
+
+  /* Fluid scale. Each step interpolates between a 360px and a 1440px
+     viewport, so type resizes continuously instead of snapping at
+     breakpoints — this is what makes the layout feel fluid rather than
+     stepped. Steps share one ratio so headings stay in proportion. */
+  --step--1: clamp(0.78rem, 0.75rem + 0.14vw, 0.86rem);
+  --step-0:  clamp(0.98rem, 0.94rem + 0.20vw, 1.09rem);
+  --step-1:  clamp(1.18rem, 1.09rem + 0.42vw, 1.44rem);
+  --step-2:  clamp(1.45rem, 1.26rem + 0.86vw, 1.94rem);
+  --step-3:  clamp(1.80rem, 1.44rem + 1.62vw, 2.62rem);
+  --step-4:  clamp(2.24rem, 1.61rem + 2.82vw, 3.53rem);
+  --step-5:  clamp(2.80rem, 1.75rem + 4.68vw, 4.76rem);
+  --step-6:  clamp(3.48rem, 1.79rem + 7.53vw, 6.43rem);
+  /* The wordmark alone runs bigger than the scale — it is a mark, not text. */
+  --step-mark: clamp(4rem, 1.2rem + 12.4vw, 11rem);
+
+  /* Tracking. Heavy display type needs negative tracking to stop the
+     counters filling in; labels need a lot of positive tracking. */
+  --track-tight: -0.03em;
+  --track-snug: -0.015em;
+  --track-normal: 0;
+  --track-wide: 0.1em;
+  --track-widest: 0.26em;
+
+  --leading-tight: 0.92;
+  --leading-snug: 1.16;
+  --leading-normal: 1.65;
+
+  /* ---- Space -------------------------------------------------------------
+     One geometric scale used for every margin, padding and gap on the site.
+     Consistent rhythm is most of what separates "clean" from "busy". */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-s:   1rem;
+  --space-m:   1.5rem;
+  --space-l:   2.25rem;
+  --space-xl:  3.5rem;
+  --space-2xl: 5.5rem;
+  --space-3xl: 8rem;
+
+  /* Section rhythm is fluid too, so vertical pacing scales with the page. */
+  --section-y: clamp(4.5rem, 3rem + 6.5vw, 9rem);
+  --section-y-lg: clamp(6rem, 3.5rem + 10vw, 13rem);
+
+  /* ---- Measure & layout --------------------------------------------------
+     --shell is the outer page width; --measure caps paragraph line length
+     around 68 characters, which is where long-form reading stays easy. */
+  --shell: 78rem;
+  --shell-narrow: 52rem;
+  --measure: 34rem;
+  --gutter: clamp(1.25rem, 0.7rem + 2.6vw, 3rem);
+
+  /* Height of the fixed header, used for scroll-padding so anchor links
+     land below it rather than underneath it. */
+  --header-h: clamp(4.25rem, 3.5rem + 2vw, 5.5rem);
+
+  /* ---- Edges & depth -----------------------------------------------------
+     Corners stay square. Rounded corners read "friendly software"; this
+     brand wants a cut edge. */
+  --radius: 0px;
+  --radius-sm: 2px;
+  --border: 1px solid var(--ink-600);
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 28px 60px -20px rgb(0 0 0 / 0.85);
+
+  /* ---- Motion ------------------------------------------------------------
+     Slow, eased, never bouncy. Every transition on the site pulls from
+     these durations so nothing feels out of step. */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur: 340ms;
+  --dur-slow: 720ms;
+
+  /* ---- Layering ----------------------------------------------------------
+     Named z-indexes so stacking never becomes a guessing game. */
+  --z-header: 100;
+  --z-menu: 200;
+  --z-lightbox: 300;
+  --z-grain: 400;
+}
