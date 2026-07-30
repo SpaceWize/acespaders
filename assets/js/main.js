@@ -340,6 +340,63 @@
     });
   }
 
+   function initScrollHero() {
+  const video = document.getElementById('heroVideo');
+  const section = document.getElementById('home-hero');
+  const progressBar = document.getElementById('heroProgress');
+
+  if (!video || !section) return;
+
+  // Wait for video metadata so we know the duration
+  const setup = () => {
+    const duration = video.duration;
+
+    const update = () => {
+      const rect = section.getBoundingClientRect();
+      const scrollable = section.offsetHeight - window.innerHeight;
+      const scrolled = -rect.top;
+
+      // progress 0 → 1
+      let progress = scrolled / scrollable;
+      progress = Math.max(0, Math.min(1, progress));
+
+      // scrub the video
+      video.currentTime = progress * duration;
+
+      // optional progress bar
+      if (progressBar) {
+        progressBar.style.width = `${progress * 100}%`;
+      }
+    };
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          update();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // run once on load
+    update();
+  };
+
+  if (video.readyState >= 1) {
+    setup();
+  } else {
+    video.addEventListener('loadedmetadata', setup);
+  }
+
+  // keep video paused (we control it via currentTime)
+  video.pause();
+}
+
+// call it when DOM is ready
+document.addEventListener('DOMContentLoaded', initScrollHero);
+
   /* ------------------------------------------------------------------------
      Footer year
      ---------------------------------------------------------------------- */
