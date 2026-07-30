@@ -340,62 +340,50 @@
     });
   }
 
-   function initScrollHero() {
-  const video = document.getElementById('heroVideo');
-  const section = document.getElementById('home-hero');
-  const progressBar = document.getElementById('heroProgress');
+  function initScrollHero() {
+    var video = document.getElementById("heroVideo");
+    var section = document.getElementById("home");
+    if (!video || !section) return;
 
-  if (!video || !section) return;
+    var setup = function () {
+      var duration = video.duration;
 
-  // Wait for video metadata so we know the duration
-  const setup = () => {
-    const duration = video.duration;
+      var update = function () {
+        var rect = section.getBoundingClientRect();
+        var scrollable = section.offsetHeight - window.innerHeight;
+        if (scrollable <= 0) return;
 
-    const update = () => {
-      const rect = section.getBoundingClientRect();
-      const scrollable = section.offsetHeight - window.innerHeight;
-      const scrolled = -rect.top;
+        var scrolled = -rect.top;
+        var progress = Math.max(0, Math.min(1, scrolled / scrollable));
+        video.currentTime = progress * duration;
+      };
 
-      // progress 0 → 1
-      let progress = scrolled / scrollable;
-      progress = Math.max(0, Math.min(1, progress));
+      var ticking = false;
+      window.addEventListener(
+        "scroll",
+        function () {
+          if (!ticking) {
+            window.requestAnimationFrame(function () {
+              update();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
 
-      // scrub the video
-      video.currentTime = progress * duration;
-
-      // optional progress bar
-      if (progressBar) {
-        progressBar.style.width = `${progress * 100}%`;
-      }
+      update();
     };
 
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          update();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
+    if (video.readyState >= 1) {
+      setup();
+    } else {
+      video.addEventListener("loadedmetadata", setup);
+    }
 
-    // run once on load
-    update();
-  };
-
-  if (video.readyState >= 1) {
-    setup();
-  } else {
-    video.addEventListener('loadedmetadata', setup);
+    video.pause();
   }
-
-  // keep video paused (we control it via currentTime)
-  video.pause();
-}
-
-// call it when DOM is ready
-document.addEventListener('DOMContentLoaded', initScrollHero);
 
   /* ------------------------------------------------------------------------
      Footer year
@@ -416,6 +404,7 @@ document.addEventListener('DOMContentLoaded', initScrollHero);
     initReveal();
     initCursor();
     initContactForm();
+     initScrollHero();
     initYear();
   }
 
