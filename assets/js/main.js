@@ -340,48 +340,83 @@
     });
   }
 
-function initScrollHero() {
-  var video = document.getElementById("heroVideo");
-  var section = document.getElementById("home");
-  if (!video || !section) return;
+  function initScrollHero() {
+    var canvas = document.getElementById("heroCanvas");
+    var section = document.getElementById("home");
+    if (!canvas || !section) return;
 
-  var targetTime = 0;
-  var currentTime = 0;
-  var duration = 0;
-  var smoothing = 0.8; // lower = smoother/slower, higher = snappier (0.08–0.25)
+    var ctx = canvas.getContext("2d");
+    var frameCount = 96; // ← change to your actual frame count
+    var frames = new Array(frameCount);
+    var currentFrame = -1;
+    var loaded = 0;
 
-  video.pause();
-
-  function onScroll() {
-    if (!duration) return;
-    var rect = section.getBoundingClientRect();
-    var scrollable = section.offsetHeight - window.innerHeight;
-    if (scrollable <= 0) return;
-
-    var progress = Math.max(0, Math.min(1, -rect.top / scrollable));
-    targetTime = progress * duration;
-  }
-
-  function tick() {
-    // ease currentTime toward targetTime
-    currentTime += (targetTime - currentTime) * smoothing;
-
-    // only seek when the difference is meaningful (reduces decode thrash)
-    if (Math.abs(video.currentTime - currentTime) > 0.01) {
-      video.currentTime = currentTime;
+    function resize() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (currentFrame >= 0) drawFrame(currentFrame);
     }
 
-    requestAnimationFrame(tick);
+    function drawFrame(index) {
+      var img = frames[index];
+      if (!img) return;
+
+      var cw = window.innerWidth;
+      var ch = window.innerHeight;
+      var iw = img.naturalWidth;
+      var ih = img.naturalHeight;
+
+      // object-fit: cover
+      var scale = Math.max(cw / iw, ch / ih);
+      var sw = iw * scale;
+      var sh = ih * scale;
+      var x = (cw - sw) / 2;
+      var y = (ch - sh) / 2;
+
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.drawImage(img, x, y, sw, sh);
+    }
+
+    // Preload frames
+    for (var i = 1; i <= frameCount; i++) {
+      (function (n) {
+        var img = new Image();
+        img.src = "assets/frames/frame-" + String(n).padStart(4, "0") + ".jpg";
+        img.onload = function () {
+          frames[n - 1] = img;
+          loaded++;
+          if (loaded === 1) {
+            currentFrame = 0;
+            drawFrame(0);
+          }
+        };
+      })(i);
+    }
+
+    function onScroll() {
+      var rect = section.getBoundingClientRect();
+      var scrollable = section.offsetHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+
+      var progress = Math.max(0, Math.min(1, -rect.top / scrollable));
+      var index = Math.min(frameCount - 1, Math.floor(progress * frameCount));
+
+      if (index !== currentFrame && frames[index]) {
+        currentFrame = index;
+        drawFrame(index);
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", resize);
+    resize();
   }
-
-  video.addEventListener("loadedmetadata", function () {
-    duration = video.duration;
-    onScroll();
-  });
-
-  window.addEventListener("scroll", onScroll, { passive: true });
-  requestAnimationFrame(tick);
-}
 
   /* ------------------------------------------------------------------------
      Footer year
