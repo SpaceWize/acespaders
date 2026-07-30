@@ -70,30 +70,6 @@
   </div>
 </header>
 <!--/#HEADER-->
-
-<main class="page" id="main">
-<section class="home-hero" id="home-hero">
-  <div class="hero-sticky">
-    <video
-      class="hero-video"
-      id="heroVideo"
-      src="./assets/kling_20260730_VIDEO_the_shot_s_2467_0.mp4"
-      muted
-      playsinline
-      preload="auto"
-    ></video>
-
-    <div class="hero-overlay"></div>
-
-    <div class="hero-content">
-      <p class="hero-label">Tesla • Cybertruck</p>
-      <h1 class="hero-title">Built for the<br>impossible</h1>
-      <p class="hero-sub">Scroll to explore</p>
-    </div>
-
-    <div class="hero-progress" id="heroProgress"></div>
-  </div>
-</section>
   <!-- ==================== HERO ====================
        One centred block. Both pieces of lettering are links, as on the
        original: the ACE / SPADERS mark goes to Ace Advisor, "Let's Talk In
@@ -105,30 +81,42 @@
        With JS off, or on a touch screen, they stay at 0 and nothing moves.
   -->
   <section class="hero-split" id="home" data-cursor-stage>
-    <div class="shell hero-split__inner">
+<section class="hero-split" id="home" data-cursor-stage>
+  <!-- video goes behind everything -->
+  <video
+    class="hero-video"
+    id="heroVideo"
+    src="./assets/kling_20260730_VIDEO_the_shot_s_2467_0.mp4"
+    muted
+    playsinline
+    preload="auto"
+  ></video>
 
-      <h1 class="sr-only">Ace Spaders</h1>
-      <a class="hero-mark" href="ace-advisor.html" aria-label="Ace Spaders &mdash; the Ace Advisor">
-        <span class="hero-mark__ace" aria-hidden="true">Ace</span>
-        <span class="hero-mark__spaders" aria-hidden="true">Spaders</span>
-      </a>
+  <div class="hero-overlay"></div>
 
-      <a class="hero-talk" href="cybertruck.html" aria-label="Let&rsquo;s talk in the truck">
-        <span class="hero-talk__lets" aria-hidden="true">Let&rsquo;s Talk</span>
-        <span class="hero-talk__truck" aria-hidden="true">In The Truck</span>
-      </a>
+  <div class="shell hero-split__inner">
+    <h1 class="sr-only">Ace Spaders</h1>
 
-      <a class="pulse-btn start-here" href="#paths">Start Here</a>
+    <a class="hero-mark" href="ace-advisor.html" aria-label="Ace Spaders — the Ace Advisor">
+      <span class="hero-mark__ace" aria-hidden="true">Ace</span>
+      <span class="hero-mark__spaders" aria-hidden="true">Spaders</span>
+    </a>
 
-      <p class="hero-tagline">
-        <strong>Ace Spaders</strong> offers discreet high-ticket advisory for
-        business scaling, crisis navigation, on-location scouting and
-        representation. Immersive sessions and boots-on-the-ground work
-        <em>in BC and beyond</em>.
-      </p>
-    </div>
-  </section>
+    <a class="hero-talk" href="cybertruck.html" aria-label="Let’s talk in the truck">
+      <span class="hero-talk__lets" aria-hidden="true">Let’s Talk</span>
+      <span class="hero-talk__truck" aria-hidden="true">In The Truck</span>
+    </a>
 
+    <a class="pulse-btn start-here" href="#paths">Start Here</a>
+
+    <p class="hero-tagline">
+      <strong>Ace Spaders</strong> offers discreet high-ticket advisory for
+      business scaling, crisis navigation, on-location scouting and
+      representation. Immersive sessions and boots-on-the-ground work
+      <em>in BC and beyond</em>.
+    </p>
+  </div>
+</section>
   <!-- ==================== CHOOSE YOUR PATH ====================
        Where Start Here lands.
 
