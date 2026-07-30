@@ -348,7 +348,7 @@ function initScrollHero() {
   var targetTime = 0;
   var currentTime = 0;
   var duration = 0;
-  var smoothing = 0.11; // lower = smoother/slower, higher = snappier (0.08–0.25)
+  var smoothing = 0.8; // lower = smoother/slower, higher = snappier (0.08–0.25)
 
   video.pause();
 
