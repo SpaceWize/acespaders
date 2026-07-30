@@ -6,8 +6,8 @@
 
    Palette and type are lifted from the existing Wix site so the rebuild
    keeps the same feeling:
-     #080808  page black        #282626 / #423737  warm charcoal + brown
-     #F9A700  signature amber   #8B0000 / #B30505  deep red
+     #1b1c1f  page ground       #f5b301  signature gold
+     #22d3ee  cyan              #e5342b  red
      Montserrat Black display, Inter body
    ========================================================================== */
 
@@ -15,7 +15,7 @@
   /* ---- Colour ------------------------------------------------------------
      A warm near-black ramp — the darks carry a brown cast rather than going
      blue, which is what keeps it feeling like leather and asphalt instead of
-     default-dark-mode. Amber is the one bright thing on the page. */
+     default-dark-mode. Gold, cyan and red carry all the colour. */
   --ink-900: #1b1c1f;   /* page ground */
   --ink-800: #141518;   /* recessed surface: panels behind media */
   --ink-700: #24262a;   /* raised surface: cards, stuck header */
@@ -58,6 +58,9 @@
   --alert: var(--red-500);
   --rule: color-mix(in oklab, var(--gold-500) 30%, transparent);
   --rule-faint: color-mix(in oklab, var(--bone-100) 10%, transparent);
+  /* Teal-tinted divider, used for the rules between sections and list items
+     so the page carries the brand cyan rather than plain grey hairlines. */
+  --rule-edge: color-mix(in oklab, var(--cyan-500) 30%, transparent);
 
   /* ---- Type --------------------------------------------------------------
      Two families. Montserrat at its heaviest weight carries the display —
