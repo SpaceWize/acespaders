@@ -203,84 +203,6 @@
   }
 
   /* ------------------------------------------------------------------------
-     Gallery lightbox
-     Uses a native <dialog>, which gives us Escape-to-close, focus trapping
-     and background inertness for free. Arrow keys step through the set.
-     ---------------------------------------------------------------------- */
-
-  function initLightbox() {
-    var dialog = document.querySelector("[data-lightbox]");
-    var triggers = Array.prototype.slice.call(document.querySelectorAll("[data-lightbox-open]"));
-    if (!dialog || !triggers.length || typeof dialog.showModal !== "function") return;
-
-    var media = dialog.querySelector("[data-lightbox-media]");
-    var caption = dialog.querySelector("[data-lightbox-caption]");
-    var counter = dialog.querySelector("[data-lightbox-counter]");
-    var closeBtn = dialog.querySelector("[data-lightbox-close]");
-    var index = 0;
-
-    function show(next) {
-      // Wrap around at both ends.
-      index = (next + triggers.length) % triggers.length;
-
-      var trigger = triggers[index];
-      var img = trigger.querySelector("img");
-      var text = trigger.getAttribute("data-caption") || "";
-
-      media.innerHTML = "";
-
-      if (img) {
-        var full = document.createElement("img");
-        full.src = img.getAttribute("data-full") || img.currentSrc || img.src;
-        full.alt = img.alt || text;
-        media.appendChild(full);
-        media.removeAttribute("data-placeholder");
-      } else {
-        // No image supplied yet — fall back to the spade placeholder.
-        media.setAttribute("data-placeholder", "");
-      }
-
-      caption.textContent = text;
-      counter.textContent = index + 1 + " / " + triggers.length;
-    }
-
-    triggers.forEach(function (trigger, i) {
-      trigger.addEventListener("click", function () {
-        show(i);
-        dialog.showModal();
-      });
-    });
-
-    dialog.addEventListener("keydown", function (event) {
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        show(index + 1);
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        show(index - 1);
-      }
-    });
-
-    if (closeBtn) {
-      closeBtn.addEventListener("click", function () {
-        dialog.close();
-      });
-    }
-
-    // Clicking the backdrop closes. The backdrop is the dialog element
-    // itself, so ignore clicks that landed on any child.
-    dialog.addEventListener("click", function (event) {
-      if (event.target === dialog) dialog.close();
-    });
-
-    // Return focus to the tile that opened the dialog.
-    dialog.addEventListener("close", function () {
-      var trigger = triggers[index];
-      if (trigger) trigger.focus();
-    });
-  }
-
-  /* ------------------------------------------------------------------------
      Cursor tracking
      Writes two custom properties on the hero — --mx and --my, each running
      -1 to 1 from the centre of the element. All the actual movement is done
@@ -361,23 +283,60 @@
       event.preventDefault();
       if (!form.reportValidity()) return;
 
-      var data = new FormData(form);
-      var name = (data.get("name") || "").toString().trim();
+      // Serialise every field generically, so adding or removing inputs in the
+      // markup needs no change here. Checkbox groups share a name and are
+      // collected into one comma-separated line.
+      var groups = [];
+      var byName = {};
+
+      new FormData(form).forEach(function (value, key) {
+        value = String(value).trim();
+        if (!value) return;
+        if (!(key in byName)) {
+          byName[key] = [];
+          groups.push(key);
+        }
+        byName[key].push(value);
+      });
+
+      var body = groups
+        .map(function (key) {
+          var vals = byName[key];
+          return vals.length > 1
+            ? key + ":\n  - " + vals.join("\n  - ")
+            : key + ": " + vals[0];
+        })
+        .join("\n\n");
+
+      var name = (byName["First & Last Name"] || byName.name || [""])[0];
       var subject = "Enquiry — " + (name || "Ace Spaders");
 
-      var body = [
-        "Name: " + (data.get("name") || ""),
-        "Email: " + (data.get("email") || ""),
-        "Organisation: " + (data.get("organisation") || ""),
-        "Engagement: " + (data.get("engagement") || ""),
-        "",
-        (data.get("message") || "").toString()
-      ].join("\n");
-
-      window.location.href =
+      var href =
         "mailto:" + mailto +
         "?subject=" + encodeURIComponent(subject) +
         "&body=" + encodeURIComponent(body);
+
+      // mailto: URLs get truncated by some clients past a couple of thousand
+      // characters. This form can exceed that, so fall back to a plain
+      // subject-only mail and put the details on the clipboard instead.
+      if (href.length > 1900 && navigator.clipboard) {
+        navigator.clipboard.writeText(body).then(
+          function () {
+            window.alert(
+              "Your answers have been copied to the clipboard — please paste " +
+              "them into the email that opens."
+            );
+            window.location.href =
+              "mailto:" + mailto + "?subject=" + encodeURIComponent(subject);
+          },
+          function () {
+            window.location.href = href;
+          }
+        );
+        return;
+      }
+
+      window.location.href = href;
     });
   }
 
@@ -399,7 +358,6 @@
     initScrollSpy();
     initReveal();
     initCursor();
-    initLightbox();
     initContactForm();
     initYear();
   }
