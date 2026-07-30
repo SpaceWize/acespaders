@@ -340,50 +340,48 @@
     });
   }
 
-  function initScrollHero() {
-    var video = document.getElementById("heroVideo");
-    var section = document.getElementById("home");
-    if (!video || !section) return;
+function initScrollHero() {
+  var video = document.getElementById("heroVideo");
+  var section = document.getElementById("home");
+  if (!video || !section) return;
 
-    var setup = function () {
-      var duration = video.duration;
+  var targetTime = 0;
+  var currentTime = 0;
+  var duration = 0;
+  var smoothing = 0.11; // lower = smoother/slower, higher = snappier (0.08–0.25)
 
-      var update = function () {
-        var rect = section.getBoundingClientRect();
-        var scrollable = section.offsetHeight - window.innerHeight;
-        if (scrollable <= 0) return;
+  video.pause();
 
-        var scrolled = -rect.top;
-        var progress = Math.max(0, Math.min(1, scrolled / scrollable));
-        video.currentTime = progress * duration;
-      };
+  function onScroll() {
+    if (!duration) return;
+    var rect = section.getBoundingClientRect();
+    var scrollable = section.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) return;
 
-      var ticking = false;
-      window.addEventListener(
-        "scroll",
-        function () {
-          if (!ticking) {
-            window.requestAnimationFrame(function () {
-              update();
-              ticking = false;
-            });
-            ticking = true;
-          }
-        },
-        { passive: true }
-      );
+    var progress = Math.max(0, Math.min(1, -rect.top / scrollable));
+    targetTime = progress * duration;
+  }
 
-      update();
-    };
+  function tick() {
+    // ease currentTime toward targetTime
+    currentTime += (targetTime - currentTime) * smoothing;
 
-    if (video.readyState >= 1) {
-      setup();
-    } else {
-      video.addEventListener("loadedmetadata", setup);
+    // only seek when the difference is meaningful (reduces decode thrash)
+    if (Math.abs(video.currentTime - currentTime) > 0.01) {
+      video.currentTime = currentTime;
     }
 
-    video.pause();
+    requestAnimationFrame(tick);
   }
+
+  video.addEventListener("loadedmetadata", function () {
+    duration = video.duration;
+    onScroll();
+  });
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  requestAnimationFrame(tick);
+}
 
   /* ------------------------------------------------------------------------
      Footer year
