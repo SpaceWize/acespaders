@@ -20,7 +20,7 @@
   display: grid;
   place-items: center;
   gap: var(--space-m);
-  min-height: 100svh;          /* full viewport */
+  height: 300vh;          /* full viewport */
   padding-block: calc(var(--header-h) + var(--space-2xl)) var(--space-2xl);
   overflow: hidden;
   text-align: center;
@@ -28,18 +28,22 @@
 
 /* video layer – sits behind everything */
 .hero-split .hero-video {
-  position: absolute;
+  position: sticky;
   inset: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   object-fit: cover;
   z-index: 0;
 }
 
 /* dark overlay so text stays readable */
 .hero-split .hero-overlay {
-  position: absolute;
-  inset: 0;
+  position: sticky;                 /* ← was absolute */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  margin-top: -100vh;               /* pull it back over the video */
   z-index: 1;
   background:
     radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%),
@@ -49,11 +53,16 @@
 
 /* text stays on top */
 .hero-split__inner {
-  position: relative;
-  z-index: 2;                  /* important – must be above video + overlay */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  margin-top: -100vh;               /* pull it back over video + overlay */
+  z-index: 2;
   display: grid;
+  place-items: center;
   justify-items: center;
   gap: var(--space-m);
+  padding-block: calc(var(--header-h) + var(--space-2xl)) var(--space-2xl);
 }
 
 /* Red and teal washes behind the lettering — the only colour in the hero now
