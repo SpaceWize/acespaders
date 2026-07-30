@@ -1,17 +1,14 @@
 /* ==========================================================================
    PAGES
-   Blocks belonging to a specific page or page type: the home hero and its
-   two paths, the inner-page masthead used by ace-advisor and cybertruck,
-   the service rows, the photo gallery and its lightbox, and the contact
-   layout.
+   Blocks belonging to a specific page or page type: the split hero and its
+   two paths, the About band, the shared offer layout used by ace-advisor and
+   cybertruck, the header socials, the footer, and the contact form panel.
    ========================================================================== */
 
 /* ==========================================================================
-   SPLIT HERO
-   A rebuild of the original two-panel opener: truck-and-water on the left
-   with the spinning moon and the ACE / SPADERS mark, city-at-night on the
-   right with "Let's Talk / In The Truck", and "Start Here" straddling the
-   seam between them.
+   HERO
+   A single centred block: the ACE / SPADERS mark over "Let's Talk In The
+   Truck", with Start Here beneath. No photographs, no frame.
 
    Cursor reactions are driven by two custom properties that JS writes on
    the hero — --mx and --my, each running -1 to 1 from the centre. CSS does
@@ -21,212 +18,34 @@
 
 .hero-split {
   position: relative;
-  padding-block: calc(var(--header-h) + var(--space-l)) var(--space-xl);
-}
-
-/* The red frame around the whole composition, as on the original. */
-.hero-frame {
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--frame);
-  background: var(--ink-800);
-}
-
-.hero-panels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: clamp(22rem, 16rem + 26vw, 34rem);
-}
-
-/* Below 44rem the two panels stack, so the seam — and the Start Here button
-   that straddles it — has to stop being a vertical divide.
-
-   The grid's min-height is dropped here and given to the panels instead:
-   left on the grid it would be split between the two stacked panels, making
-   each of them half-height and cramping the lettering. */
-@media (max-width: 44rem) {
-  .hero-panels {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
-
-  .hero-panel { min-height: 15rem; }
-
-  /* Clear the moon, which sits in this panel's top-right corner. */
-  .hero-panel--left { padding-block-start: var(--space-2xl); }
-
-  /* Clear Start Here, which is pinned to the bottom of the whole frame and
-     therefore lands over this panel once they are stacked. */
-  .hero-panel--right { padding-block-end: var(--space-3xl); }
-}
-
-.hero-panel {
-  position: relative;
   display: grid;
   place-items: center;
+  gap: var(--space-m);
+  min-height: min(100svh, 44rem);
+  padding-block: calc(var(--header-h) + var(--space-2xl)) var(--space-2xl);
   overflow: hidden;
-  padding: var(--space-l) var(--space-m) var(--space-2xl);
-  isolation: isolate;
+  text-align: center;
 }
 
-.hero-panel + .hero-panel { border-left: 1px solid color-mix(in oklab, var(--frame) 55%, transparent); }
-
-@media (max-width: 44rem) {
-  .hero-panel + .hero-panel {
-    border-left: 0;
-    border-top: 1px solid color-mix(in oklab, var(--frame) 55%, transparent);
-  }
-}
-
-/* Photograph slot. Drop an <img> in and it fills the panel. */
-.hero-panel__media {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: linear-gradient(150deg, var(--ink-600), var(--ink-900) 70%);
-}
-
-.hero-panel__media img { width: 100%; height: 100%; object-fit: cover; }
-
-.hero-panel__media[data-placeholder]::after {
-  content: "\2660";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: clamp(2.5rem, 7vw, 4.5rem);
-  color: color-mix(in oklab, var(--gold-500) 14%, transparent);
-}
-
-/* A scrim so the lettering holds up over any photograph. */
-.hero-panel::before {
+/* Red and teal washes behind the lettering — the only colour in the hero now
+   that the photographs are gone. */
+.hero-split::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.22) 60%, rgb(0 0 0 / 0.35));
-}
-
-/* ---- Moving water -------------------------------------------------------
-   The rainbow slick on the left panel. A blurred multi-stop gradient drifts
-   sideways while its hue rotates, which reads as oil moving on water over
-   whatever photograph sits underneath. Both properties animate in a single
-   keyframe set — running two animations would have them fight over `filter`.
-   Blend mode does the rest, so it tints the photo rather than covering it. */
-
-.water {
-  position: absolute;
-  inset: -25%;
-  z-index: -1;
   pointer-events: none;
-  /* Kept low deliberately: color-dodge lifts highlights hard, so anything
-     above ~0.25 blows out a real photograph instead of shimmering on it. */
-  opacity: 0.24;
-  mix-blend-mode: color-dodge;
-  background: linear-gradient(
-    100deg,
-    transparent 0%,
-    #1b6ca8 12%,
-    #17b3a3 24%,
-    #8ed36b 36%,
-    #f2c14e 48%,
-    #e2643f 60%,
-    #a34fbf 72%,
-    #2f6fd0 84%,
-    transparent 100%
-  );
-  background-size: 220% 100%;
-  animation: water-drift 18s linear infinite;
+  background:
+    radial-gradient(42% 46% at 22% 26%, color-mix(in oklab, var(--red-500) 20%, transparent), transparent 70%),
+    radial-gradient(44% 44% at 80% 72%, color-mix(in oklab, var(--cyan-600) 22%, transparent), transparent 70%);
 }
 
-@keyframes water-drift {
-  0%   { background-position:   0% 50%; filter: blur(26px) hue-rotate(0deg); }
-  50%  { background-position: 110% 50%; filter: blur(34px) hue-rotate(180deg); }
-  100% { background-position: 220% 50%; filter: blur(26px) hue-rotate(360deg); }
-}
-
-/* ---- The moon -----------------------------------------------------------
-   Spins slowly, and is a link through to the two paths. The miner rides on
-   top and does NOT spin with the disc — it sits in its own layer so the
-   pickaxe can swing independently. */
-
-.moon {
-  position: absolute;
-  z-index: 2;
-  inset-block-start: 6%;
-  inset-inline-end: 7%;
-  width: clamp(5rem, 15%, 11rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease);
-}
-
-.moon:hover { transform: scale(1.06); filter: drop-shadow(0 0 22px rgb(255 255 255 / 0.35)); }
-
-/* Smaller and tighter into the corner on narrow screens, where the panel is
-   not wide enough to keep it clear of the lettering. */
-@media (max-width: 44rem) {
-  .moon {
-    width: 4.25rem;
-    inset-block-start: 3.5%;
-    inset-inline-end: 4%;
-  }
-}
-
-.moon__disc {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-  background: radial-gradient(circle at 34% 30%, #d8d8d4, #8f8f8b 45%, #4a4a48 100%);
-  animation: moon-spin 48s linear infinite;
-}
-
-.moon__disc img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-
-@keyframes moon-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* The miner. Sits above the disc, bobbing very slightly so the swing reads
-   as effort rather than a detached arm. */
-.moon__miner {
-  position: absolute;
-  inset-block-end: 46%;
-  inset-inline-start: 34%;
-  width: 34%;
-  transform-origin: bottom center;
-  animation: miner-bob 1.1s ease-in-out infinite;
-}
-
-.moon__miner img { width: 100%; height: auto; }
-
-@keyframes miner-bob {
-  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
-  50%      { transform: translateY(4%) rotate(1.5deg); }
-}
-
-/* The pickaxe, as its own layer so it can swing from the handle. The timing
-   is deliberately shared with the bob above: the miner dips as the axe
-   comes down. */
-.moon__pickaxe {
-  position: absolute;
-  inset-block-start: -18%;
-  inset-inline-start: 46%;
-  width: 78%;
-  transform-origin: 12% 88%;
-  animation: pickaxe-swing 1.1s ease-in-out infinite;
-}
-
-.moon__pickaxe img { width: 100%; height: auto; }
-
-@keyframes pickaxe-swing {
-  0%   { transform: rotate(-52deg); }
-  55%  { transform: rotate(14deg); }   /* strike */
-  70%  { transform: rotate(6deg); }    /* small rebound off the rock */
-  100% { transform: rotate(-52deg); }
+.hero-split__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-m);
 }
 
 /* ---- ACE / SPADERS mark -------------------------------------------------
@@ -327,15 +146,13 @@
   to   { background-position: -60% 50%; }
 }
 
-/* ---- Start Here ---------------------------------------------------------
-   Straddles the seam between the two panels and pulses continuously. */
+/* ---- Pulsing button ----------------------------------------------------
+   Shared by "Start Here" in the hero and "Go Here" at the foot of the offer
+   pages — the client wants them identical. .pulse-btn carries the look;
+   .start-here adds only the hero positioning on top of it. */
 
-.start-here {
-  position: absolute;
-  z-index: 3;
-  inset-block-end: clamp(1rem, 0.4rem + 2vw, 2.25rem);
-  inset-inline-start: 50%;
-  translate: -50% 0;
+.pulse-btn {
+  display: inline-block;
   padding: 0.85em 2.6em;
   border: 1px solid color-mix(in oklab, var(--gold-500) 65%, transparent);
   background: rgb(0 0 0 / 0.55);
@@ -363,12 +180,17 @@
   }
 }
 
-.start-here:hover {
+.pulse-btn:hover {
   color: var(--ink-900);
   background: var(--gold-500);
   border-color: var(--gold-400);
   animation-play-state: paused;
 }
+
+.pulse-btn-row { margin-block-start: var(--space-xl); text-align: center; }
+
+/* In the hero it simply sits under the lettering. */
+.start-here { margin-block-start: var(--space-s); }
 
 /* ---- Hero tagline -------------------------------------------------------- */
 
@@ -389,12 +211,8 @@
    speeding it up, and drop the cursor reactions to their resting state. */
 
 @media (prefers-reduced-motion: reduce) {
-  .water,
-  .moon__disc,
-  .moon__miner,
-  .moon__pickaxe,
   .hero-talk__truck,
-  .start-here { animation: none; }
+  .pulse-btn { animation: none; }
 
   .hero-mark,
   .hero-mark__spaders,
@@ -407,117 +225,6 @@
     -webkit-text-fill-color: var(--red-500);
     color: var(--red-500);
   }
-}
-
-/* ---- Legacy hero --------------------------------------------------------
-   The earlier single-column hero, kept because the masthead and inner pages
-   still borrow its glow and cue treatments. */
-
-.hero {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 100svh;
-  padding-block: calc(var(--header-h) + var(--space-2xl)) var(--space-3xl);
-  overflow: hidden;
-}
-
-/* Two offset amber washes give the flat black some depth behind the type.
-   Decorative and non-interactive. */
-.hero__glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(48% 46% at 20% 24%, color-mix(in oklab, var(--gold-600) 24%, transparent), transparent 70%),
-    radial-gradient(42% 42% at 84% 74%, color-mix(in oklab, var(--ink-500) 60%, transparent), transparent 70%);
-}
-
-.hero__inner { position: relative; z-index: 1; }
-
-/* ---- Stacked wordmark ---------------------------------------------------
-   Two lines, tight enough to read as one block. The second line is drawn as
-   an outline so the mark has weight without becoming a wall of solid type. */
-
-.hero__mark {
-  font-family: var(--font-display);
-  font-weight: var(--weight-display);
-  font-size: var(--step-mark);
-  line-height: 0.84;
-  letter-spacing: var(--track-tight);
-  text-transform: uppercase;
-  margin-block: var(--space-s) var(--space-l);
-}
-
-.hero__mark-line { display: block; }
-
-.hero__mark-line--fill { color: var(--text); }
-
-.hero__mark-line--outline {
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--accent);
-  /* Standard property, still unevenly supported — the -webkit- prefixed one
-     above does the work in every current browser. */
-  text-stroke: 1.5px var(--accent);
-  /* Fallback: any browser that ignores both stroke properties would render
-     invisible text, so paint a colour underneath via background-clip. */
-  background: linear-gradient(transparent, transparent);
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-/* Below ~34rem the hairline stroke gets too fine to read; go solid. */
-@media (max-width: 34rem) {
-  .hero__mark-line--outline {
-    color: var(--accent);
-    -webkit-text-stroke: 0;
-    text-stroke: 0;
-  }
-}
-
-.hero__lede {
-  max-width: 40rem;
-  font-size: var(--step-1);
-  color: var(--text-soft);
-}
-
-.hero__lede strong { color: var(--accent); font-weight: var(--weight-semi); }
-
-/* Scroll cue pinned to the bottom of the hero — the original site's
-   "Start Here". */
-.hero__cue {
-  position: absolute;
-  inset-block-end: var(--space-l);
-  inset-inline-start: 50%;
-  translate: -50% 0;
-  display: grid;
-  justify-items: center;
-  gap: var(--space-2xs);
-  font-size: var(--step--1);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--text-muted);
-  transition: color var(--dur) var(--ease);
-}
-
-.hero__cue:hover { color: var(--accent); }
-
-.hero__cue-line {
-  width: 1px;
-  height: 3rem;
-  background: linear-gradient(var(--accent), transparent);
-  transform-origin: top;
-  animation: cue 2.6s var(--ease) infinite;
-}
-
-@keyframes cue {
-  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
-  50%      { transform: scaleY(1);    opacity: 1; }
-}
-
-@media (max-width: 48rem) {
-  .hero__cue { display: none; }
 }
 
 /* ---- Path cards ---------------------------------------------------------
@@ -646,7 +353,7 @@
   font-size: var(--step-2);
   letter-spacing: var(--track-snug);
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--edge);
 }
 
 @media (max-width: 30rem) {
@@ -685,255 +392,560 @@
   color: var(--text-soft);
 }
 
-/* Back-to-home crumb above the title. */
-.masthead__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-block-end: var(--space-m);
+/* ---- Left column: the pitch --------------------------------------------- */
+
+.offer__aside { text-align: center; }
+
+.offer__title {
+  font-size: clamp(1.9rem, 1rem + 3.4vw, 3rem);
+  line-height: 0.98;
+  color: var(--text);
+}
+
+/* The spade sits on its own line between the two words of the title, as on
+   the original. */
+.offer__title-spade {
+  display: block;
+  margin-block: 0.12em;
+  font-size: 0.62em;
+  color: var(--accent);
+}
+
+.offer__prose {
+  margin-block-start: var(--space-l);
+  text-align: left;
+  font-size: var(--step--1);
+}
+
+.offer__prose > * + * { margin-block-start: var(--space-s); }
+
+.offer__prose strong { color: var(--text); }
+
+/* Links inside the pitch copy are tinted rather than underlined, matching
+   the original's coloured inline links. */
+.offer__prose a,
+.offer__note a,
+.offer-item__body a {
+  color: var(--edge);
+  border-bottom: 1px solid color-mix(in oklab, var(--edge) 45%, transparent);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.offer__prose a:hover,
+.offer__note a:hover,
+.offer-item__body a:hover {
+  color: var(--edge-bright);
+  border-bottom-color: var(--edge-bright);
+}
+
+/* The emphasised "explore the other services" line. */
+.offer__cross {
+  display: block;
+  margin-block-start: var(--space-m);
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+}
+
+.offer__cross a { color: var(--accent); border-bottom-color: color-mix(in oklab, var(--gold-500) 45%, transparent); }
+.offer__cross a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+
+/* Footnote-style bundling rules. */
+.offer__notes {
+  margin-block-start: var(--space-m);
+  padding-block-start: var(--space-s);
+  border-top: 1px solid var(--rule-edge);
+  text-align: left;
+}
+
+.offer__note {
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+/* Worked bundle examples. */
+.offer__examples {
+  margin-block-start: var(--space-m);
+  text-align: left;
+}
+
+.offer__examples-head {
   font-size: var(--step--1);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--track-wide);
-  text-transform: uppercase;
-  color: var(--text-muted);
-  transition: color var(--dur-fast) var(--ease);
+  color: var(--text);
 }
 
-.masthead__back:hover { color: var(--accent); }
-.masthead__back-arrow { transition: transform var(--dur) var(--ease); }
-.masthead__back:hover .masthead__back-arrow { transform: translateX(-0.3em); }
-
-/* ---- Service rows -------------------------------------------------------
-   Full-width rows, heavier than a card grid, for services that need room to
-   be explained. */
-
-.service {
+.offer__examples ul {
   display: grid;
-  gap: clamp(var(--space-m), 1rem + 3vw, var(--space-2xl));
-  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
-  align-items: start;
-  padding-block: var(--space-xl);
-  border-top: 1px solid var(--rule-faint);
+  gap: var(--space-s);
+  margin-block-start: var(--space-s);
 }
 
-.service:last-of-type { border-bottom: 1px solid var(--rule-faint); }
-
-.service__index {
-  font-family: var(--font-display);
-  font-weight: var(--weight-display);
-  font-size: var(--step-3);
-  letter-spacing: var(--track-tight);
-  color: color-mix(in oklab, var(--gold-500) 45%, transparent);
-  line-height: 1;
-}
-
-.service__title { margin-block: var(--space-2xs) var(--space-s); font-size: var(--step-2); }
-
-.service__list { display: grid; gap: var(--space-2xs); margin-block-start: var(--space-m); }
-
-.service__list li {
+.offer__examples li {
   position: relative;
   padding-inline-start: var(--space-m);
-  font-size: var(--step-0);
+  font-size: var(--step--1);
+  font-style: italic;
+  color: var(--text-soft);
 }
 
-.service__list li::before {
+.offer__examples li::before {
   content: "\2660";
   position: absolute;
   inset-inline-start: 0;
+  font-style: normal;
   font-size: 0.72em;
   color: var(--accent);
 }
 
-/* ---- Gallery ------------------------------------------------------------
-   Used on cybertruck.html for the truck and on-location photographs. Built
-   from grid spans rather than columns so the DOM order — and therefore the
-   reading and tab order — stays correct. */
-
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
-  gap: var(--space-s);
-}
-
-/* Every third tile runs tall and every fifth runs wide: enough irregularity
-   to avoid a rigid grid without needing a masonry library. */
-.gallery__item:nth-child(3n + 1) .gallery__media { aspect-ratio: 3 / 4; }
-.gallery__item:nth-child(5n + 3) { grid-column: span 2; }
-.gallery__item:nth-child(5n + 3) .gallery__media { aspect-ratio: 16 / 10; }
-
-@media (max-width: 34rem) {
-  .gallery__item:nth-child(5n + 3) { grid-column: span 1; }
-  .gallery__item:nth-child(5n + 3) .gallery__media { aspect-ratio: 4 / 3; }
-}
-
-.gallery__btn { display: block; width: 100%; text-align: left; }
-
-.gallery__media {
-  /* A <span> inside the button, so it must be made a block box before
-     aspect-ratio and the absolute-positioned caption mean anything. */
-  display: block;
-  position: relative;
-  overflow: hidden;
-  aspect-ratio: 1;
-  border: 1px solid var(--ink-600);
-  background: linear-gradient(150deg, var(--ink-500), var(--ink-900) 75%);
-  transition: border-color var(--dur) var(--ease);
-}
-
-.gallery__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--dur-slow) var(--ease);
-}
-
-/* Placeholder spade for tiles awaiting real photography. */
-.gallery__media[data-placeholder]::before {
-  content: "\2660";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: clamp(2rem, 6vw, 3.25rem);
-  color: color-mix(in oklab, var(--gold-500) 18%, transparent);
-}
-
-/* Caption rises from the bottom edge on hover or keyboard focus. */
-.gallery__caption {
-  position: absolute;
-  inset-inline: 0;
-  inset-block-end: 0;
-  padding: var(--space-m) var(--space-s) var(--space-s);
-  background: linear-gradient(transparent, rgb(0 0 0 / 0.88));
+.offer__book {
+  margin-block-start: var(--space-l);
   font-size: var(--step--1);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--track-wide);
-  text-transform: uppercase;
-  color: var(--bone-100);
-  opacity: 0;
-  transform: translateY(0.5rem);
-  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
-}
-
-.gallery__btn:hover .gallery__media,
-.gallery__btn:focus-visible .gallery__media { border-color: var(--accent); }
-
-.gallery__btn:hover .gallery__caption,
-.gallery__btn:focus-visible .gallery__caption { opacity: 1; transform: translateY(0); }
-
-.gallery__btn:hover .gallery__media img { transform: scale(1.05); }
-
-/* ---- Lightbox -----------------------------------------------------------
-   A native <dialog>, so Escape, focus trapping and background inertness all
-   come from the platform rather than from script. */
-
-.lightbox {
-  width: min(64rem, 92vw);
-  max-width: none;
-  max-height: 92svh;
-  padding: 0;
-  border: 1px solid var(--rule);
-  background: var(--ink-800);
   color: var(--text);
-  overflow: hidden;
 }
 
-.lightbox::backdrop {
-  background: rgb(0 0 0 / 0.88);
-  backdrop-filter: blur(6px);
-}
+.offer__book a { color: var(--accent); border-bottom-color: color-mix(in oklab, var(--gold-500) 45%, transparent); }
+.offer__book a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
 
-.lightbox[open] { animation: lightbox-in var(--dur) var(--ease-out-soft); }
-
-@keyframes lightbox-in {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-.lightbox__media {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  background: linear-gradient(150deg, var(--ink-500), var(--ink-900) 75%);
-  display: grid;
-  place-items: center;
-}
-
-.lightbox__media img { width: 100%; height: 100%; object-fit: contain; }
-
-.lightbox__media[data-placeholder]::before {
-  content: "\2660";
-  font-size: clamp(3rem, 10vw, 5rem);
-  color: color-mix(in oklab, var(--gold-500) 22%, transparent);
-}
-
-.lightbox__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-m);
-  padding: var(--space-s) var(--space-m);
-  border-top: 1px solid var(--rule-faint);
-}
-
-.lightbox__caption {
+/* The calendar nudge. Deliberately the loudest thing in this column. */
+.offer__calendar {
+  margin-block-start: var(--space-s);
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: var(--step--1);
-  letter-spacing: var(--track-wide);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--accent);
+}
+
+.offer__calendar a { color: var(--frame); border-bottom: 0; }
+.offer__calendar a:hover { color: var(--gold-400); }
+
+/* ---- Right column: numbered services ------------------------------------ */
+
+.offer__list { display: grid; }
+
+.offer-item {
+  padding-block: var(--space-l);
+  border-top: 1px solid var(--rule-edge);
+}
+
+.offer-item:first-child { border-top: 0; padding-block-start: 0; }
+
+/* "1 | Title" on one line, the number separated by a rule as on the
+   original. */
+.offer-item__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin-block-end: var(--space-s);
+}
+
+.offer-item__num {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-1);
+  color: var(--accent);
+}
+
+.offer-item__num::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 0.9em;
+  margin-inline-start: var(--space-xs);
+  vertical-align: -0.08em;
+  background: color-mix(in oklab, var(--edge) 60%, transparent);
+}
+
+.offer-item__title {
+  margin: 0;
+  font-size: var(--step-1);
+  letter-spacing: var(--track-snug);
+  color: var(--text);
+}
+
+.offer-item__body { font-size: var(--step-0); }
+.offer-item__body > * + * { margin-block-start: var(--space-s); }
+
+/* ---- Closing form band --------------------------------------------------
+   "Look. Use the Form." — the sign-off both offer pages share. */
+
+.use-form {
+  display: grid;
+  gap: clamp(var(--space-m), 1rem + 3vw, var(--space-2xl));
+  align-items: center;
+  padding-block: var(--section-y);
+  border-top: 2px solid var(--edge);
+}
+
+@media (min-width: 48rem) {
+  .use-form { grid-template-columns: auto 1fr; }
+}
+
+.use-form__title {
+  font-size: clamp(1.6rem, 0.9rem + 2.6vw, 2.6rem);
+  color: var(--text);
+}
+
+.use-form__body {
+  max-width: 34rem;
+  font-size: var(--step-0);
   color: var(--text-soft);
 }
 
-.lightbox__close {
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--rule);
-  border-radius: 50%;
-  color: var(--text);
-  font-size: var(--step-0);
-  line-height: 1;
-  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+/* ==========================================================================
+   ABOUT FEATURE
+   The long-form About block on the home page. Given its own banded surface
+   with cyan rules top and bottom so it reads as a distinct chapter rather
+   than another section of body copy.
+   ========================================================================== */
+
+.about-feature {
+  position: relative;
+  padding-block: var(--section-y);
+  border-block: 2px solid var(--edge);
+  background:
+    radial-gradient(80% 60% at 50% 0%, color-mix(in oklab, var(--cyan-600) 12%, transparent), transparent 70%),
+    var(--ink-800);
 }
 
-.lightbox__close:hover { background: var(--accent); color: var(--ink-900); }
+.about-feature__label {
+  margin-block-end: var(--space-l);
+  text-align: center;
+  font-size: clamp(2rem, 1rem + 4vw, 3.4rem);
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
 
-/* ---- Wide feature image -------------------------------------------------
-   The hero photograph slot on cybertruck.html. Sized by aspect-ratio so the
-   page does not reflow when the real image finally loads in. */
+.about-feature__grid {
+  display: grid;
+  gap: clamp(var(--space-l), 1rem + 4vw, var(--space-2xl));
+  align-items: start;
+}
 
-.feature {
+@media (min-width: 56rem) {
+  .about-feature__grid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+
+  /* The portrait rides alongside the copy rather than scrolling away. */
+  .about-feature__media-wrap {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-m));
+  }
+}
+
+.about-feature__name {
+  font-size: clamp(1.7rem, 1rem + 2.8vw, 2.6rem);
+  line-height: 1;
+  color: var(--text);
+}
+
+.about-feature__prose {
+  margin-block-start: var(--space-l);
+  font-size: var(--step-0);
+}
+
+.about-feature__prose > * + * { margin-block-start: var(--space-m); }
+.about-feature__prose p { max-width: 40rem; }
+.about-feature__prose strong { color: var(--text); }
+
+.about-feature__prose a {
+  color: var(--edge);
+  border-bottom: 1px solid color-mix(in oklab, var(--edge) 45%, transparent);
+}
+
+.about-feature__prose a:hover { color: var(--edge-bright); border-bottom-color: var(--edge-bright); }
+
+/* Closing lines, indented as on the original. */
+.about-feature__closing {
+  margin-block-start: var(--space-l);
+  padding-inline-start: var(--space-m);
+  border-inline-start: 2px solid color-mix(in oklab, var(--gold-500) 55%, transparent);
+}
+
+.about-feature__closing p { color: var(--text); }
+
+/* Signature block. */
+.about-feature__sign { margin-block-start: var(--space-xl); }
+
+.about-feature__signature {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: var(--step-2);
+  letter-spacing: var(--track-snug);
+  color: var(--accent);
+}
+
+.about-feature__role {
+  margin-block-start: var(--space-2xs);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+/* Portrait / video slot. */
+.about-feature__media {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 2500 / 1330; /* matches the source photograph on the live site */
-  border: 1px solid var(--ink-600);
-  background: linear-gradient(150deg, var(--ink-500), var(--ink-900) 75%);
+  aspect-ratio: 3 / 4;
+  border: 2px solid var(--frame);
+  background: linear-gradient(150deg, var(--ink-600), var(--ink-900) 70%);
 }
 
-.feature img { width: 100%; height: 100%; object-fit: cover; }
+.about-feature__media img { width: 100%; height: 100%; object-fit: cover; }
 
-.feature[data-placeholder]::before {
+.about-feature__media[data-placeholder]::after {
   content: "\2660";
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: clamp(3rem, 9vw, 5.5rem);
-  color: color-mix(in oklab, var(--gold-500) 18%, transparent);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  color: color-mix(in oklab, var(--gold-500) 16%, transparent);
 }
 
-/* ---- Contact layout -----------------------------------------------------
-   Form takes the wider track; details sit alongside and drop underneath on
-   narrow screens. */
+/* ==========================================================================
+   HERO LINKS
+   The two blocks of hero lettering are links on the original: the ACE /
+   SPADERS mark goes to Ace Advisor, "Let's Talk In The Truck" goes to the
+   Cybertruck. They keep their own styling and only pick up a hover lift, so
+   they never look like ordinary links.
+   ========================================================================== */
 
-.contact-grid {
+a.hero-mark,
+a.hero-talk {
+  display: block;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.hero-mark:hover .hero-mark__ace,
+a.hero-mark:hover .hero-mark__spaders { filter: brightness(1.12); }
+
+a.hero-talk:hover .hero-talk__lets { filter: brightness(1.15); }
+
+/* The sheen speeds up on hover, so the lettering reads as live. */
+a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
+
+/* ==========================================================================
+   HEADER SOCIALS
+   The red-bordered icon strip at the right of the header on the original.
+   ========================================================================== */
+
+.socials {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0.3rem 0.45rem;
+  border: 2px solid var(--frame);
+  background: var(--ink-900);
+}
+
+.socials__link {
   display: grid;
-  gap: clamp(var(--space-xl), 1rem + 5vw, var(--space-2xl));
-  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
-  align-items: start;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--bone-100);
+  transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
-@media (min-width: 62rem) {
-  .contact-grid { grid-template-columns: 1.35fr 1fr; }
+.socials__link:hover { color: var(--accent); transform: translateY(-1px); }
+.socials__link svg { width: 100%; height: 100%; fill: currentColor; }
+
+/* Hidden in the header on small screens, where the burger needs the room —
+   the footer copy still carries them. */
+@media (max-width: 56rem) {
+  .header .socials { display: none; }
 }
+
+/* A cyan rule under the header, as on the original. */
+.header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 1px;
+  background: var(--edge);
+}
+
+/* ==========================================================================
+   MINIMAL FOOTER
+   The original footer is a single centred credit line above a cyan rule.
+   ========================================================================== */
+
+.footer-min {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--space-xl);
+  border-top: 1px solid var(--edge);
+  text-align: center;
+}
+
+.footer-min__credit {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--text-soft);
+}
+
+.footer-min__socials {
+  display: flex;
+  justify-content: center;
+  margin-block-end: var(--space-m);
+}
+
+/* ==========================================================================
+   CONTACT FORM PAGE
+   The form sits on a cream panel — the one light surface on the site, as on
+   the original. Everything inside it flips to dark-on-light, so the panel
+   declares its own local colours rather than inheriting the site's.
+   ========================================================================== */
+
+.form-intro { text-align: center; }
+
+.form-intro__eyebrow {
+  font-size: var(--step--1);
+  font-weight: var(--weight-semi);
+  color: var(--accent);
+}
+
+.form-intro__title {
+  margin-block-start: var(--space-2xs);
+  font-size: clamp(1.8rem, 1rem + 3.2vw, 3rem);
+  color: var(--accent);
+}
+
+.form-panel {
+  --panel-ink: #16181b;
+  --panel-muted: #6f6a5c;
+  width: min(38rem, 100%);
+  margin: var(--space-xl) auto 0;
+  padding: clamp(var(--space-m), 0.75rem + 2vw, var(--space-xl));
+  background: #fdf3d8;
+  color: var(--panel-ink);
+  border: 2px solid var(--frame);
+}
+
+.form-panel__title {
+  margin-block-end: var(--space-l);
+  text-align: center;
+  font-size: clamp(1.3rem, 0.9rem + 1.6vw, 1.9rem);
+  font-style: italic;
+  line-height: 1.15;
+  color: var(--panel-ink);
+}
+
+.form-panel__title u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Every field inside the panel is dark-on-cream. */
+.form-panel .field__label,
+.form-panel .fieldset__legend {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--panel-ink);
+}
+
+.form-panel .field__control {
+  background: #fffdf6;
+  border: 1px solid var(--panel-ink);
+  border-radius: 999px;
+  color: var(--panel-ink);
+}
+
+.form-panel textarea.field__control { border-radius: 12px; }
+
+.form-panel .field__control::placeholder { color: #8d8778; }
+
+.form-panel .field__control:hover { border-color: var(--frame); }
+
+.form-panel .field__control:focus {
+  border-color: var(--frame);
+  background: #fff;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--frame) 25%, transparent);
+}
+
+.form-panel .field__hint { color: var(--panel-muted); }
+
+/* Checkbox groups. Kept as a plain stack — these lists run long (the add-ons
+   alone are 22 items) and columns would make them harder to scan, not
+   easier. */
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset + .fieldset { margin-block-start: var(--space-l); }
+
+.fieldset__legend {
+  padding: 0;
+  margin-block-end: var(--space-2xs);
+}
+
+.checks { display: grid; gap: 0.15rem; }
+
+.check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2xs);
+  align-items: start;
+  padding-block: 0.18rem;
+  font-size: var(--step--1);
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.check input {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-block-start: 0.2rem;
+  accent-color: var(--frame);
+  cursor: pointer;
+}
+
+.check:hover { color: var(--frame); }
+
+/* Submit sits full width at the foot of the panel. */
+.form-panel__submit {
+  width: 100%;
+  margin-block-start: var(--space-l);
+  padding: 0.9em 2em;
+  border: 2px solid var(--panel-ink);
+  border-radius: 999px;
+  background: var(--panel-ink);
+  color: #fdf3d8;
+  font-size: var(--step-0);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.form-panel__submit:hover { background: var(--frame); border-color: var(--frame); color: #fff; }
+
+.form-panel__thanks {
+  margin-block-start: var(--space-l);
+  text-align: center;
+  font-size: var(--step--1);
+  color: #4f4a3f;
+}
+
+/* Closing notes under the panel, back on the dark page. */
+.form-notes {
+  display: grid;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-xl);
+  text-align: center;
+}
+
+.form-notes p {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--text-soft);
+}
+
+.form-notes p:first-child { color: var(--accent); }
