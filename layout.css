@@ -1,0 +1,268 @@
+/* ==========================================================================
+   LAYOUT
+   Page shell, header and navigation, section rhythm, grids, footer.
+   Structural concerns only — anything reusable and self-contained lives in
+   components.css instead.
+   ========================================================================== */
+
+/* ---- Shell --------------------------------------------------------------
+   One container class used by every section on the site. The narrow variant
+   is for long-form reading columns. */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.shell--narrow { max-width: var(--shell-narrow); }
+
+/* Page content sits above the vignette painted by body::before. */
+.page { position: relative; z-index: 1; }
+
+/* ---- Section rhythm -----------------------------------------------------
+   Sections carry their own vertical space so pages never hand-tune margins.
+   .section--flush removes the top pad where two sections should read as one
+   continuous block. */
+
+.section { padding-block: var(--section-y); }
+.section--lg { padding-block: var(--section-y-lg); }
+.section--flush { padding-block-start: 0; }
+.section--raised { background: var(--bg-raised); }
+
+/* A hairline between stacked sections, faded at both ends so it reads as a
+   drawn line rather than a border. */
+.section--ruled { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--rule-edge) 22%, var(--rule-edge) 78%, transparent) 1; }
+
+/* ---- Header -------------------------------------------------------------
+   Fixed, transparent over the hero, then fades to a solid blurred bar once
+   the page scrolls. JS toggles .is-stuck. */
+
+.header {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: var(--z-header);
+  transition: background-color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+  border-bottom: 1px solid transparent;
+}
+
+/* PERFORMANCE — this used to be `backdrop-filter: blur(14px) saturate(1.4)`
+   over an 82%-opaque bar. A backdrop-filter on a fixed, full-width element
+   re-filters everything behind it on every frame that changes, which over
+   the scrolling hero video was the second-largest source of jank (p95 frame
+   time 50ms with the blur, 16.8ms without).
+
+   At only 18% transmission the blur was barely visible anyway, so the bar
+   now carries the same weight with opacity alone plus a soft gradient into
+   the page. If you reintroduce the blur, re-measure the hero scroll. */
+.header.is-stuck {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--ink-900) 94%, transparent),
+      color-mix(in oklab, var(--ink-900) 88%, transparent)
+    );
+  border-bottom-color: var(--rule-faint);
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+  min-height: clamp(4.25rem, 3.5rem + 2vw, 5.5rem);
+}
+
+/* ---- Wordmark ------------------------------------------------------------ */
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  font-weight: var(--weight-display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.wordmark__spade {
+  color: var(--accent);
+  font-size: 0.82em;
+  transition: transform var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.wordmark:hover .wordmark__spade {
+  color: var(--accent-bright);
+  transform: rotate(-12deg) scale(1.08);
+}
+
+/* ---- Primary navigation -------------------------------------------------- */
+
+.nav__list {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-m), 0.5rem + 1.8vw, var(--space-xl));
+}
+
+.nav__link {
+  position: relative;
+  display: inline-block;
+  padding-block: var(--space-2xs);
+  font-size: var(--step--1);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--text-soft);
+  transition: color var(--dur-fast) var(--ease);
+}
+
+/* Underline grows from the left on hover and stays put on the current page.
+   Using transform (not width) keeps it on the compositor. */
+.nav__link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur) var(--ease);
+}
+
+.nav__link:hover { color: var(--text); }
+.nav__link:hover::after { transform: scaleX(1); }
+
+.nav__link[aria-current="page"] { color: var(--text); }
+.nav__link[aria-current="page"]::after { transform: scaleX(1); }
+
+/* The two path links leave the single page for a separate file, so they are
+   marked out from the in-page anchors with the brand amber. */
+.nav__link--path { color: var(--accent); }
+.nav__link--path:hover { color: var(--accent-bright); }
+
+/* A hairline before the first path link, separating "sections of this page"
+   from "somewhere else". Hidden in the stacked mobile sheet. */
+.nav__item--divide { position: relative; }
+
+.nav__item--divide::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.15rem;
+  inset-inline-start: calc(clamp(var(--space-m), 0.5rem + 1.8vw, var(--space-xl)) / -2);
+  width: 1px;
+  background: var(--rule-faint);
+}
+
+@media (max-width: 56rem) {
+  .nav__item--divide::before { display: none; }
+}
+
+/* ---- Menu toggle (small screens) ----------------------------------------
+   Two bars that cross into an X. Hidden entirely on desktop. */
+
+.nav__toggle {
+  display: none;
+  position: relative;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-inline-end: calc(var(--space-2xs) * -1);
+  color: var(--text);
+}
+
+.nav__toggle span {
+  position: absolute;
+  inset-inline: 0.6rem;
+  height: 1px;
+  background: currentColor;
+  transition: transform var(--dur) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+.nav__toggle span:nth-child(1) { top: 1.15rem; }
+.nav__toggle span:nth-child(2) { top: 1.6rem; }
+
+.nav__toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(0.225rem) rotate(45deg); }
+.nav__toggle[aria-expanded="true"] span:nth-child(2) { transform: translateY(-0.225rem) rotate(-45deg); }
+
+@media (max-width: 56rem) {
+  .nav__toggle { display: block; }
+
+  /* Full-height sheet. Kept in the DOM and moved off-screen so the
+     transition can run in both directions. */
+  .nav__list {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-menu);
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-l);
+    background: color-mix(in oklab, var(--ink-900) 97%, transparent);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-1.5rem);
+    transition: opacity var(--dur) var(--ease),
+                transform var(--dur) var(--ease),
+                visibility 0s linear var(--dur);
+  }
+
+  .nav__list.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+
+  .nav__link { font-size: var(--step-2); letter-spacing: var(--track-widest); }
+
+  /* Links stagger in behind the sheet so the menu unfolds rather than
+     appearing all at once. */
+  .nav__list.is-open .nav__item {
+    animation: menu-in var(--dur-slow) var(--ease-out-soft) backwards;
+    animation-delay: calc(60ms * var(--i, 0) + 90ms);
+  }
+
+  @keyframes menu-in {
+    from { opacity: 0; transform: translateY(1.25rem); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* When the sheet is open the page behind it must not scroll. */
+body.is-menu-open { overflow: hidden; }
+
+/* ---- Grids --------------------------------------------------------------
+   Auto-fit grids so column counts fall out of the available width instead
+   of a stack of breakpoints. */
+
+.grid {
+  display: grid;
+  gap: var(--space-m);
+}
+
+/* Track minimums are tuned against the 78rem shell so these land on 2, 3 and
+   4 columns respectively at desktop width, rather than squeezing in an extra
+   column and forcing headings to wrap mid-word. */
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr)); }
+.grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); }
+.grid--4 { grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); }
+
+/* Asymmetric split for text-beside-image blocks. Collapses to one column
+   when there is not enough room for the narrower track. */
+.split {
+  display: grid;
+  gap: clamp(var(--space-l), 1rem + 4vw, var(--space-2xl));
+  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+}
+
+.split--reverse > :first-child { order: 2; }
+
+@media (max-width: 48rem) {
+  .split--reverse > :first-child { order: 0; }
+}

@@ -22,9 +22,10 @@ assets/css/tokens.css       Colour, type scale, spacing, motion — all values
 assets/css/base.css         Reset, element defaults, grain overlay, focus
 assets/css/layout.css       Shell, header, nav, grids, footer
 assets/css/components.css   Buttons, cards, steps, quote, form, callout…
-assets/css/pages.css        Hero, paths, masthead, services, gallery, lightbox
-assets/js/main.js           Header, nav, scroll-spy, reveals, lightbox, form
-assets/img/                 Photographs (currently empty — see below)
+assets/css/pages.css        Hero, paths, masthead, services, gallery
+assets/js/main.js           Header, nav, scroll-spy, reveals, scroll hero, form
+assets/img/                 Photographs, and the hero poster frame
+assets/video/               hero.mp4 + hero-720.mp4 — the scroll-scrubbed hero
 
 CNAME, .nojekyll, robots.txt, sitemap.xml   GitHub Pages + SEO plumbing
 ```
@@ -59,19 +60,74 @@ The nav differs slightly per page: on `index.html` the Home/About/Contact links
 are bare anchors (`#about`); on the two path pages they are prefixed
 (`index.html#about`) so they still resolve.
 
-### The animated hero
+### The scroll-scrubbed hero
 
-The home page opens on a two-panel hero rebuilt from the original. Six things
-move:
+The home page opens on a video that never plays. `#home` is three viewports
+tall and the panel inside it is `position: sticky`, so scrolling through the
+extra height scrubs the shot instead of moving the panel: the truck advances
+as you scroll down and reverses as you scroll back up.
 
 | Piece | How it works |
 |---|---|
-| **Water** | `.water` — a blurred multi-stop gradient drifting sideways while its hue rotates, blended `color-dodge` over the photo. Opacity is deliberately low (0.24); above ~0.25 `color-dodge` blows out a real photograph instead of shimmering on it. |
-| **Moon** | `.moon__disc` spins on a 48s loop. The whole moon is a link to `#paths`. |
-| **Miner** | `.moon__miner` bobs; `.moon__pickaxe` is a **separate layer** that swings from the handle, so it needs its own image. Both share a 1.1s cycle — the miner dips as the axe comes down. |
+| **The video** | `assets/video/hero.mp4`, with `hero-720.mp4` served below 56rem. `main.js` maps scroll progress through `#home` onto `video.currentTime`. |
+| **Scrub length** | The `height` on `.js .hero-split` — 300vh. Raise it to slow the scrub, lower it to speed it up. No JS change needed; the script reads the height. |
 | **ACE / SPADERS** | Drifts toward the cursor. SPADERS also tilts toward it, which gives the pair parallax rather than moving as one rigid block. |
 | **Let's Talk / In The Truck** | Shifts toward the cursor. "In The Truck" carries a sheen — a narrow highlight sweeping across a mostly-red gradient, clipped to the glyphs. |
 | **Start Here** | Pulses on a 2.4s loop; the pulse pauses on hover. |
+
+#### Replacing the hero video — read this first
+
+**The encode matters more than the code.** A normal mp4 has one keyframe every
+few seconds; seeking to an arbitrary time means decoding forward from the last
+one, so scrubbing a normally-encoded clip stutters no matter how good the
+JavaScript is. The hero files are encoded **all-intra** — every frame is a
+keyframe — which makes any seek a single-frame decode. Files get roughly 2–3×
+larger, and that is the trade that buys a smooth scrub.
+
+To re-encode a new clip the same way:
+
+```bash
+ffmpeg -i source.mp4 -an \
+  -vf "scale=1920:1080:flags=lanczos" \
+  -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 28 \
+  -g 1 -keyint_min 1 \
+  -x264-params "keyint=1:min-keyint=1:scenecut=0:ref=1:bframes=0" \
+  -movflags +faststart \
+  assets/video/hero.mp4
+```
+
+Then the small-screen version (`scale=1280:720`, `-crf 30`, same flags) as
+`hero-720.mp4`, and a poster from the first frame:
+
+```bash
+ffmpeg -i source.mp4 -frames:v 1 -vf "scale=1600:900:flags=lanczos" \
+  -q:v 6 assets/img/hero-poster.jpg
+```
+
+Sanity check afterwards: `ffprobe -show_frames source.mp4 | grep -c key_frame=1`
+should equal the total frame count. Keep the clip short — five seconds is
+plenty, because it is stretched across two viewports of scrolling.
+
+**Keep the poster in step with the video.** It is what shows before the video
+has downloaded, with JavaScript off, and for visitors who ask for reduced
+motion — in those last two cases the video is never fetched at all, so the
+poster is the entire hero.
+
+#### If the hero scroll ever feels rough again
+
+Three things were measured as the actual causes, in order of impact. Frame
+times below are from a scripted scroll through the hero:
+
+| Cause | Fix | Effect |
+|---|---|---|
+| `mix-blend-mode: overlay` on the fixed grain layer (`body::after`) | removed; grain is now a plain low-opacity layer | 33ms → 16.7ms median |
+| `backdrop-filter: blur()` on the stuck header | replaced with opacity + gradient | 50ms → 16.8ms p95 |
+| A video that is not all-intra | re-encode as above | the scrub does not track at all |
+
+A fixed, full-viewport layer that *blends* or *filters* has to be recomposited
+on every frame the content beneath it changes — and beneath it is a video
+changing every frame. Both effects are cheap on a static page and expensive
+here. If you reintroduce either, measure the hero scroll before shipping it.
 
 **How the cursor tracking works.** `main.js` writes two custom properties on
 the hero — `--mx` and `--my`, each running −1 to 1 from the centre. Every
@@ -88,25 +144,15 @@ Tracking is skipped entirely on touch screens (no cursor to follow) and when
 reduced motion is requested. In both cases the properties stay at 0 and
 everything simply sits still — the layout is identical either way.
 
-### Photographs the hero needs
+### Photographs still needed
 
-All the slots are built and correctly sized; each is a one-line swap. Drop an
+The slots are built and correctly sized; each is a one-line swap. Drop an
 `<img>` into the slot and delete its `data-placeholder` attribute.
 
 | File | Where | Notes |
 |---|---|---|
-| `assets/img/hero-truck.jpg` | left panel | the truck / water shot |
-| `assets/img/hero-city.jpg` | right panel | the city-at-night shot |
-| `assets/img/moon.png` | `.moon__disc` | square, transparent edges; it rotates, so anything off-centre will wobble |
-| `assets/img/miner.png` | `.moon__miner` | transparent PNG, **without** the pickaxe |
-| `assets/img/pickaxe.png` | `.moon__pickaxe` | transparent PNG, separate so it can swing |
 | `assets/img/path-cybertruck.jpg` | paths | square |
 | `assets/img/path-advisor.jpg` | paths | square |
-
-The miner and pickaxe being separate files is what makes the swing possible.
-If you only have them as one combined image, put it in `miner.png`, leave
-`pickaxe.png` out, and the miner will bob without swinging — still animated,
-just less specific.
 
 ### Adding the Cybertruck photograph
 
@@ -138,9 +184,7 @@ In `cybertruck.html`, replace a placeholder tile:
 </span>
 ```
 
-Remove `data-placeholder` when you do. `data-full` is optional — it is what
-the lightbox loads; without it the lightbox reuses the tile image. The
-`data-caption` on the parent button is the text shown under the lightbox.
+Remove `data-placeholder` when you do.
 
 ### Adding photographs to the two path cards
 
@@ -214,9 +258,10 @@ sensitive data to migrate.
   visible and every link still works.
 - **Reduced motion** is honoured — animations and reveals switch off for
   visitors who ask for that at the OS level.
-- **Accessibility.** Skip link, visible keyboard focus ring throughout, the
-  mobile menu tracks `aria-expanded` and closes on Escape, and the lightbox is
-  a native `<dialog>` so focus trapping and Escape come from the browser.
+- **Accessibility.** Skip link, visible keyboard focus ring throughout, and
+  the mobile menu tracks `aria-expanded` and closes on Escape. The hero video
+  is `aria-hidden` and not focusable — it is decoration, and the `<h1>` behind
+  it carries the page's name for screen readers.
 
 ## Checking changes locally
 

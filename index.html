@@ -24,16 +24,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Inter:wght@400;500;600&display=swap">
 
 <!-- Load order matters: tokens defines the variables everything else reads. -->
-<link rel="stylesheet" href="assets/css/tokens.css?v=6">
-<link rel="stylesheet" href="assets/css/base.css?v=6">
-<link rel="stylesheet" href="assets/css/layout.css?v=6">
-<link rel="stylesheet" href="assets/css/components.css?v=6">
-<link rel="stylesheet" href="assets/css/pages.css?v=6">
+<link rel="stylesheet" href="assets/css/tokens.css?v=7">
+<link rel="stylesheet" href="assets/css/base.css?v=7">
+<link rel="stylesheet" href="assets/css/layout.css?v=7">
+<link rel="stylesheet" href="assets/css/components.css?v=7">
+<link rel="stylesheet" href="assets/css/pages.css?v=7">
 
 <!-- Set before first paint so reveal elements start hidden without a flash.
      With JS off the class is never added and everything renders visible. -->
 <script>document.documentElement.classList.add("js");</script>
-<script src="assets/js/main.js?v=6" defer></script>
+<script src="assets/js/main.js?v=7" defer></script>
 <!--/#HEAD-->
 </head>
 
@@ -81,7 +81,27 @@
   -->
   <section class="hero-split" id="home" data-cursor-stage>
     <div class="hero-sticky">
-      <canvas class="hero-canvas" id="heroCanvas"></canvas>
+      <!-- SCROLL-SCRUBBED HERO
+           The video never plays. main.js drives currentTime from how far
+           through this section you have scrolled, so the shot advances with
+           the wheel and reverses when you scroll back up.
+
+           Both files are encoded all-intra (every frame is a keyframe), which
+           is what makes seeking to an arbitrary time cheap enough to do once
+           a frame. Re-encoding a normal mp4 will make this stutter — see the
+           ffmpeg command in the README.
+
+           The poster carries the hero on its own: it is what shows before the
+           video has decoded, with JS off, and when reduced motion is asked
+           for (in which case the section collapses to one screen and the
+           video is never fetched). -->
+      <video class="hero-video" data-hero-video
+             data-src="assets/video/hero.mp4?v=7"
+             data-src-small="assets/video/hero-720.mp4?v=7"
+             poster="assets/img/hero-poster.jpg?v=7"
+             muted playsinline preload="auto"
+             disablepictureinpicture disableremoteplayback
+             aria-hidden="true" tabindex="-1"></video>
       <div class="hero-overlay"></div>
 
       <div class="shell hero-split__inner">
