@@ -15,29 +15,70 @@
    all the actual movement, so if JS never loads the values fall back to 0
    and everything simply sits still.
    ========================================================================== */
-/* ===== SCROLL HERO (canvas) ===== */
+/* ===== SCROLL HERO =======================================================
+   A 100vh panel pinned inside a taller section: scrolling through the extra
+   height scrubs the video rather than moving the panel.
+
+   The tall section is gated behind .js and behind reduced motion. Without
+   either, the height collapses to one screen — otherwise a visitor who is
+   not getting the scrub would scroll through two blank viewports to reach
+   the rest of the page. */
+
 .hero-split {
   position: relative;
-  height: 300vh; /* higher = slower scrub */
+  height: 100svh;
+}
+
+/* The scrub length. 300vh ≈ two viewports of scrolling across the shot;
+   raise it to slow the scrub down, lower it to speed it up. Nothing in the
+   JavaScript needs to change — it reads this height. */
+.js .hero-split { height: 300vh; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .hero-split { height: 100svh; }
 }
 
 .hero-sticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100svh;
   width: 100%;
   overflow: hidden;
   display: grid;
   place-items: center;
+  /* Its own compositing layer, so scrolling the page past a pinned panel is
+     a layer move rather than a repaint of everything inside it. */
+  transform: translateZ(0);
 }
 
-.hero-canvas {
+.hero-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  /* base.css sets height:auto on every video; class beats element. */
+  object-fit: cover;
   z-index: 0;
   display: block;
+  pointer-events: none;
+  background: var(--ink-900);
+}
+
+/* Until the video reports a decoded frame, the poster is doing the work and
+   the <video> box would sit on top of it empty. Fade it in once JS confirms
+   there is something to show. */
+.hero-video { opacity: 0; transition: opacity var(--dur-slow) var(--ease); }
+.hero-video.is-ready { opacity: 1; }
+
+/* Poster as a real background layer rather than the video's own poster
+   attribute, so it stays behind the video during the crossfade instead of
+   being swapped out the instant the first frame lands. */
+.hero-sticky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--ink-900) url("../img/hero-poster.jpg?v=7") center / cover no-repeat;
 }
 
 .hero-overlay {
