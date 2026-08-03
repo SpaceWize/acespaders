@@ -340,82 +340,189 @@
     });
   }
 
+  /* ------------------------------------------------------------------------
+     Scroll hero
+     The hero video never plays. How far you have scrolled through the (tall)
+     #home section is mapped onto the video's currentTime, so the shot
+     advances with the wheel and runs backwards when you scroll back up.
+
+     Three things make this smooth, and it is worth knowing why, because
+     dropping any one of them brings the stutter back:
+
+     1. THE ENCODE. Both hero files are all-intra — every frame is a
+        keyframe. Seeking a normally-encoded video means decoding forward
+        from the last keyframe, which for a 5-second clip with one keyframe
+        means decoding the whole clip on every seek. That is not something
+        JavaScript can paper over. See the README for the ffmpeg command.
+
+     2. NO WORK IN THE SCROLL HANDLER. The scroll listener only sets a flag.
+        All the reading and seeking happens in one requestAnimationFrame
+        loop, at most once per displayed frame, and layout values are
+        measured on resize rather than per frame.
+
+     3. THE LOOP SLEEPS. It runs only while the hero is on screen, and stops
+        again once the video has caught up with the scroll position.
+     ---------------------------------------------------------------------- */
+
   function initScrollHero() {
-    var canvas = document.getElementById("heroCanvas");
+    var video = document.querySelector("[data-hero-video]");
     var section = document.getElementById("home");
-    if (!canvas || !section) return;
+    if (!video || !section) return;
 
-    var ctx = canvas.getContext("2d");
-    var frameCount = 96; // ← change to your actual frame count
-    var frames = new Array(frameCount);
-    var currentFrame = -1;
-    var loaded = 0;
+    // Reduced motion: CSS has already collapsed the section to one screen.
+    // Leave the poster in place and never fetch several megabytes of video.
+    if (REDUCED_MOTION.matches) return;
 
-    function resize() {
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = window.innerWidth;
-      var h = window.innerHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = w + "px";
-      canvas.style.height = h + "px";
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (currentFrame >= 0) drawFrame(currentFrame);
-    }
+    // How hard the video chases the scroll position each frame. Lower is
+    // smoother and laggier; 1 would track the wheel exactly, jitter included.
+    var EASE = 0.16;
+    // Stop the loop once we are within this fraction of the scrub of target.
+    var SETTLED = 0.0008;
+    // Do not issue a seek for a move smaller than half a frame — the browser
+    // would decode the same picture again.
+    var MIN_SEEK = 1 / 48;
+    // Give up waiting for a fully buffered file after this long and scrub
+    // anyway, rather than leaving the hero frozen on a flaky connection.
+    var BUFFER_TIMEOUT = 8000;
 
-    function drawFrame(index) {
-      var img = frames[index];
-      if (!img) return;
+    var duration = 0;
+    var target = 0; // 0..1, where the scroll position says we should be
+    var eased = 0; // 0..1, where we actually are
+    var sectionTop = 0;
+    var scrollable = 0;
+    var running = false;
+    var onScreen = false;
+    var ready = false;
 
-      var cw = window.innerWidth;
-      var ch = window.innerHeight;
-      var iw = img.naturalWidth;
-      var ih = img.naturalHeight;
-
-      // object-fit: cover
-      var scale = Math.max(cw / iw, ch / ih);
-      var sw = iw * scale;
-      var sh = ih * scale;
-      var x = (cw - sw) / 2;
-      var y = (ch - sh) / 2;
-
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.drawImage(img, x, y, sw, sh);
-    }
-
-    // Preload frames
-    for (var i = 1; i <= frameCount; i++) {
-      (function (n) {
-        var img = new Image();
-        img.src = "assets/frames/frame-" + String(n).padStart(4, "0") + ".jpg";
-        img.onload = function () {
-          frames[n - 1] = img;
-          loaded++;
-          if (loaded === 1) {
-            currentFrame = 0;
-            drawFrame(0);
-          }
-        };
-      })(i);
-    }
-
-    function onScroll() {
+    /* -- measurement ------------------------------------------------------
+       Layout reads are expensive and only change on resize, so they happen
+       here and never inside the loop. */
+    function measure() {
       var rect = section.getBoundingClientRect();
-      var scrollable = section.offsetHeight - window.innerHeight;
-      if (scrollable <= 0) return;
-
-      var progress = Math.max(0, Math.min(1, -rect.top / scrollable));
-      var index = Math.min(frameCount - 1, Math.floor(progress * frameCount));
-
-      if (index !== currentFrame && frames[index]) {
-        currentFrame = index;
-        drawFrame(index);
-      }
+      sectionTop = rect.top + window.scrollY;
+      scrollable = section.offsetHeight - window.innerHeight;
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", resize);
-    resize();
+    function readScroll() {
+      if (scrollable <= 0) return 0;
+      var p = (window.scrollY - sectionTop) / scrollable;
+      return p < 0 ? 0 : p > 1 ? 1 : p;
+    }
+
+    /* -- the loop -------------------------------------------------------- */
+    function tick() {
+      target = readScroll();
+      eased += (target - eased) * EASE;
+
+      var settled = Math.abs(target - eased) < SETTLED;
+      if (settled) eased = target;
+
+      if (ready && duration) {
+        var t = eased * duration;
+        // Never seek to the very end: some browsers clamp to duration and
+        // fire `ended`, which drops the last frame.
+        if (t > duration - 0.001) t = duration - 0.001;
+
+        // Assigning currentTime while a seek is already in flight is not a
+        // queue — the browser abandons the old target for the new one, which
+        // is exactly right here: we always want the newest scroll position,
+        // never a backlog of stale ones. Deliberately NOT gated on `seeked`;
+        // waiting for each seek to retire makes the video crawl behind a
+        // fast flick. currentTime already reports a pending seek's target,
+        // so this comparison will not re-issue the same seek twice.
+        if (Math.abs(video.currentTime - t) > MIN_SEEK) video.currentTime = t;
+      }
+
+      // Sleep once we have caught up. A scroll event wakes us again.
+      if (settled) {
+        running = false;
+        return;
+      }
+      window.requestAnimationFrame(tick);
+    }
+
+    function wake() {
+      if (running || !onScreen) return;
+      running = true;
+      window.requestAnimationFrame(tick);
+    }
+
+    /* -- readiness --------------------------------------------------------
+       Scrubbing a partly-downloaded video makes every seek a range request,
+       which is precisely the stutter this is meant to avoid. So hold on the
+       poster until the whole clip is buffered, then fade the video in. */
+    function checkBuffered() {
+      if (ready || !duration) return;
+      var b = video.buffered;
+      if (!b.length) return;
+      if (b.end(b.length - 1) < duration - 0.25) return;
+      enable();
+    }
+
+    function enable() {
+      if (ready) return;
+      ready = true;
+      video.classList.add("is-ready");
+      wake();
+    }
+
+    video.addEventListener("progress", checkBuffered);
+    video.addEventListener("canplaythrough", checkBuffered);
+    window.setTimeout(enable, BUFFER_TIMEOUT);
+
+    video.addEventListener("loadedmetadata", function () {
+      duration = video.duration || 0;
+      measure();
+      eased = target = readScroll();
+      checkBuffered();
+    });
+
+    // Belt and braces: a muted autoplay-less video should never play, but a
+    // stray play() from anywhere would fight the scrubber.
+    video.addEventListener("play", function () {
+      video.pause();
+    });
+
+    /* -- wiring ---------------------------------------------------------- */
+    window.addEventListener("scroll", wake, { passive: true });
+
+    // Debounced, because a resize fires continuously and each measure()
+    // forces layout.
+    var resizeTimer = 0;
+    window.addEventListener(
+      "resize",
+      function () {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(function () {
+          measure();
+          wake();
+        }, 150);
+      },
+      { passive: true }
+    );
+
+    // Only run the loop while the hero is actually on screen.
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(
+        function (entries) {
+          onScreen = entries[0].isIntersecting;
+          if (onScreen) wake();
+        },
+        { threshold: 0 }
+      ).observe(section);
+    } else {
+      onScreen = true;
+    }
+
+    /* -- load ------------------------------------------------------------
+       The source is set from JS rather than in the markup so that visitors
+       who never get the scrub — reduced motion, no JavaScript — are not made
+       to download it. The poster carries the hero for them. */
+    var small = window.matchMedia("(max-width: 56rem)").matches;
+    var src = (small && video.getAttribute("data-src-small")) || video.getAttribute("data-src");
+    if (src) video.src = src;
+
+    measure();
   }
 
   /* ------------------------------------------------------------------------
@@ -437,7 +544,7 @@
     initReveal();
     initCursor();
     initContactForm();
-     initScrollHero();
+    initScrollHero();
     initYear();
   }
 
