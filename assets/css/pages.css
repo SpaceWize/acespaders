@@ -1,0 +1,1007 @@
+/* ==========================================================================
+   PAGES
+   Blocks belonging to a specific page or page type: the split hero and its
+   two paths, the About band, the shared offer layout used by ace-advisor and
+   cybertruck, the header socials, the footer, and the contact form panel.
+   ========================================================================== */
+
+/* ==========================================================================
+   HERO
+   A single centred block: the ACE / SPADERS mark over "Let's Talk In The
+   Truck", with Start Here beneath. No photographs, no frame.
+
+   Cursor reactions are driven by two custom properties that JS writes on
+   the hero — --mx and --my, each running -1 to 1 from the centre. CSS does
+   all the actual movement, so if JS never loads the values fall back to 0
+   and everything simply sits still.
+   ========================================================================== */
+/* ===== SCROLL HERO =======================================================
+   A 100vh panel pinned inside a taller section: scrolling through the extra
+   height scrubs the video rather than moving the panel.
+
+   The tall section is gated behind .js and behind reduced motion. Without
+   either, the height collapses to one screen — otherwise a visitor who is
+   not getting the scrub would scroll through two blank viewports to reach
+   the rest of the page. */
+
+.hero-split {
+  position: relative;
+  height: 100svh;
+}
+
+/* The scrub length. 300vh ≈ two viewports of scrolling across the shot;
+   raise it to slow the scrub down, lower it to speed it up. Nothing in the
+   JavaScript needs to change — it reads this height. */
+.js .hero-split { height: 300vh; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .hero-split { height: 100svh; }
+}
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  /* Its own compositing layer, so scrolling the page past a pinned panel is
+     a layer move rather than a repaint of everything inside it. */
+  transform: translateZ(0);
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* base.css sets height:auto on every video; class beats element. */
+  object-fit: cover;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  background: var(--ink-900);
+}
+
+/* Until the video reports a decoded frame, the poster is doing the work and
+   the <video> box would sit on top of it empty. Fade it in once JS confirms
+   there is something to show. */
+.hero-video { opacity: 0; transition: opacity var(--dur-slow) var(--ease); }
+.hero-video.is-ready { opacity: 1; }
+
+/* Poster as a real background layer rather than the video's own poster
+   attribute, so it stays behind the video during the crossfade instead of
+   being swapped out the instant the first frame lands. */
+.hero-sticky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--ink-900) url("../img/hero-poster.jpg?v=7") center / cover no-repeat;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, transparent 25%, transparent 70%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+
+.hero-split__inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-m);
+  padding-block: calc(var(--header-h) + var(--space-2xl)) var(--space-2xl);
+  text-align: center;
+}
+/* Red and teal washes behind the lettering — the only colour in the hero now
+   that the photographs are gone. */
+
+
+/* ---- ACE / SPADERS mark -------------------------------------------------
+   Drifts toward the cursor. SPADERS additionally tilts toward it, pivoting
+   from its own centre, which is what gives the pair a bit of parallax
+   instead of moving as one rigid block. */
+
+.hero-mark {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  line-height: 0.86;
+  text-transform: uppercase;
+  /* --mx / --my are written by JS; 0 is the resting state. */
+  transform: translate3d(calc(var(--mx, 0) * 14px), calc(var(--my, 0) * 10px), 0);
+  transition: transform 240ms var(--ease-out-soft);
+}
+
+.hero-mark__ace,
+.hero-mark__spaders { display: block; }
+
+.hero-mark__ace {
+  font-size: clamp(2.2rem, 1rem + 5.4vw, 4.6rem);
+  letter-spacing: var(--track-snug);
+  color: var(--gold-500);
+  /* Layered shadow gives the chunky extruded look of the original. */
+  text-shadow:
+    0 1px 0 #a8760a, 0 2px 0 #8d6208, 0 3px 0 #6f4d06,
+    0 4px 0 #543a05, 0 8px 16px rgb(0 0 0 / 0.6);
+}
+
+.hero-mark__spaders {
+  margin-block-start: -0.06em;
+  font-size: clamp(2.6rem, 1rem + 6.8vw, 5.6rem);
+  letter-spacing: -0.035em;
+  color: var(--frame);
+  text-shadow:
+    0 1px 0 #9c1f18, 0 2px 0 #841a14, 0 3px 0 #6b1510,
+    0 4px 0 #52100c, 0 9px 18px rgb(0 0 0 / 0.65);
+  transform: rotate(calc(var(--mx, 0) * 3.2deg)) translate3d(calc(var(--mx, 0) * 10px), 0, 0);
+  transition: transform 300ms var(--ease-out-soft);
+}
+
+/* ---- Let's Talk / In The Truck ------------------------------------------
+   Shifts toward the cursor, and carries a sheen that sweeps across the
+   lettering on a loop. The sheen is a moving gradient clipped to the glyphs
+   via background-clip, so it needs a transparent text colour. */
+
+.hero-talk {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  line-height: 0.94;
+  text-transform: uppercase;
+  transform: translate3d(calc(var(--mx, 0) * 18px), calc(var(--my, 0) * 12px), 0);
+  transition: transform 260ms var(--ease-out-soft);
+}
+
+.hero-talk__lets,
+.hero-talk__truck { display: block; }
+
+.hero-talk__lets {
+  font-size: clamp(1.9rem, 0.8rem + 4.6vw, 3.9rem);
+  letter-spacing: var(--track-snug);
+  color: var(--cyan-500);
+  text-shadow: 0 2px 0 #0b6f85, 0 4px 14px rgb(0 0 0 / 0.6), 0 0 26px rgb(34 211 238 / 0.35);
+}
+
+.hero-talk__truck {
+  margin-block-start: 0.06em;
+  font-size: clamp(1.7rem, 0.7rem + 4.2vw, 3.5rem);
+  font-style: italic;
+  letter-spacing: -0.02em;
+  /* A narrow highlight band on a mostly-red ramp, so the lettering reads red
+     and the shine is a quick sweep across it rather than a constant wash. */
+  background: linear-gradient(
+    100deg,
+    var(--red-600) 0%, var(--red-500) 40%,
+    #ffd98a 47%, #fffaec 50%, #ffd98a 53%,
+    var(--red-500) 60%, var(--red-600) 100%
+  );
+  background-size: 320% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen 4.5s linear infinite;
+  filter: drop-shadow(0 3px 10px rgb(0 0 0 / 0.6));
+}
+
+@keyframes sheen {
+  from { background-position: 280% 50%; }
+  to   { background-position: -60% 50%; }
+}
+
+/* ---- Pulsing button ----------------------------------------------------
+   Shared by "Start Here" in the hero and "Go Here" at the foot of the offer
+   pages — the client wants them identical. .pulse-btn carries the look;
+   .start-here adds only the hero positioning on top of it. */
+
+.pulse-btn {
+  display: inline-block;
+  padding: 0.85em 2.6em;
+  border: 1px solid color-mix(in oklab, var(--gold-500) 65%, transparent);
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(6px);
+  color: var(--gold-400);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  animation: start-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes start-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(245 179 1 / 0.42), 0 6px 20px rgb(0 0 0 / 0.5);
+    border-color: color-mix(in oklab, var(--gold-500) 65%, transparent);
+  }
+  50% {
+    transform: scale(1.045);
+    box-shadow: 0 0 30px 6px rgb(245 179 1 / 0.16), 0 6px 20px rgb(0 0 0 / 0.5);
+    border-color: var(--gold-400);
+  }
+}
+
+.pulse-btn:hover {
+  color: var(--ink-900);
+  background: var(--gold-500);
+  border-color: var(--gold-400);
+  animation-play-state: paused;
+}
+
+.pulse-btn-row { margin-block-start: var(--space-xl); text-align: center; }
+
+/* In the hero it simply sits under the lettering. */
+.start-here { margin-block-start: var(--space-s); }
+
+/* ---- Hero tagline -------------------------------------------------------- */
+
+.hero-tagline {
+  max-width: 52rem;
+  margin: var(--space-l) auto 0;
+  text-align: center;
+  font-size: var(--step-0);
+  font-style: italic;
+  color: var(--text-soft);
+}
+
+.hero-tagline strong { color: var(--gold-400); font-style: normal; }
+.hero-tagline em { color: var(--cyan-400); font-style: normal; }
+
+/* ---- Motion preference --------------------------------------------------
+   Everything above is decorative. Switch all of it off rather than merely
+   speeding it up, and drop the cursor reactions to their resting state. */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-talk__truck,
+  .pulse-btn { animation: none; }
+
+  .hero-mark,
+  .hero-mark__spaders,
+  .hero-talk { transform: none; }
+
+  /* Without the sheen animation the gradient would leave the text
+     transparent, so give it a solid fill back. */
+  .hero-talk__truck {
+    background: none;
+    -webkit-text-fill-color: var(--red-500);
+    color: var(--red-500);
+  }
+}
+
+/* ---- Path cards ---------------------------------------------------------
+   The two routes off the single page: Cybertruck and Ace Advisor. Laid out
+   as on the original "Choose Your Path" screen — a red-framed image sitting
+   over a cyan plate carrying the name, with a dash between the pair.
+
+   They stay side by side down to small screens (the pairing is the point of
+   the section) and only stack when there is genuinely no room. */
+
+.paths {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(var(--space-s), 0.5rem + 3vw, var(--space-2xl));
+}
+
+.paths__dash {
+  flex: none;
+  width: clamp(1rem, 3vw, 2.25rem);
+  height: 2px;
+  margin-block-start: clamp(4rem, 12vw, 8rem);
+  background: var(--bone-100);
+}
+
+.path {
+  flex: 1 1 0;
+  max-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+  transition: transform var(--dur) var(--ease);
+}
+
+.path:hover { transform: translateY(-4px); }
+
+/* Red frame around the photograph, pulled down over the plate below so the
+   two overlap the way they do on the original. */
+.path__frame {
+  position: relative;
+  z-index: 1;
+  width: 88%;
+  padding: 3px;
+  border: 2px solid var(--frame);
+  background: var(--ink-900);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.path:hover .path__frame {
+  box-shadow: 0 0 26px -4px color-mix(in oklab, var(--frame) 70%, transparent);
+}
+
+.path__media {
+  display: block;
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--ink-600), var(--ink-900) 70%);
+}
+
+.path__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease);
+}
+
+.path:hover .path__media img { transform: scale(1.06); }
+
+.path__media[data-placeholder]::after {
+  content: "\2660";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  color: color-mix(in oklab, var(--gold-500) 18%, transparent);
+}
+
+/* Cyan plate. Sits behind the frame and extends below it to hold the name. */
+.path__plate {
+  width: 100%;
+  /* Slides up behind the frame so the two overlap; the matching top padding
+     puts the text clear of the image again. */
+  margin-block-start: -14%;
+  padding: calc(14% + var(--space-s)) var(--space-s) var(--space-s);
+  border: 2px solid var(--edge);
+  border-radius: 10px;
+  background: var(--ink-800);
+  text-align: center;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.path:hover .path__plate {
+  border-color: var(--edge-bright);
+  box-shadow: 0 0 30px -6px color-mix(in oklab, var(--edge) 65%, transparent);
+}
+
+.path__title {
+  display: block;
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 0.6rem + 1.5vw, 1.5rem);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--edge);
+  transition: color var(--dur) var(--ease);
+}
+
+.path:hover .path__title { color: var(--edge-bright); }
+
+.path__body {
+  display: block;
+  margin-block-start: var(--space-2xs);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+/* Closing line under the pair, as on the original. */
+.paths__note {
+  margin-block-start: var(--space-xl);
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-2);
+  letter-spacing: var(--track-snug);
+  text-transform: uppercase;
+  color: var(--edge);
+}
+
+@media (max-width: 30rem) {
+  .paths { flex-direction: column; align-items: center; }
+  .paths__dash { margin-block: 0; width: 2.5rem; }
+  .path { max-width: 17rem; width: 100%; }
+}
+
+/* ---- Inner page masthead ------------------------------------------------
+   Shared by ace-advisor.html and cybertruck.html so both paths open on the
+   same beat. */
+
+.masthead {
+  position: relative;
+  padding-block: calc(var(--header-h) + var(--space-2xl)) var(--section-y);
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule-faint);
+}
+
+.masthead::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(60% 80% at 15% 0%, color-mix(in oklab, var(--gold-600) 18%, transparent), transparent 68%);
+}
+
+.masthead__inner { position: relative; z-index: 1; }
+
+.masthead__title { font-size: var(--step-5); }
+
+.masthead__lede {
+  max-width: 42rem;
+  margin-block-start: var(--space-m);
+  font-size: var(--step-1);
+  color: var(--text-soft);
+}
+
+/* ---- Left column: the pitch --------------------------------------------- */
+
+.offer__aside { text-align: center; }
+
+.offer__title {
+  font-size: clamp(1.9rem, 1rem + 3.4vw, 3rem);
+  line-height: 0.98;
+  color: var(--text);
+}
+
+/* The spade sits on its own line between the two words of the title, as on
+   the original. */
+.offer__title-spade {
+  display: block;
+  margin-block: 0.12em;
+  font-size: 0.62em;
+  color: var(--accent);
+}
+
+.offer__prose {
+  margin-block-start: var(--space-l);
+  text-align: left;
+  font-size: var(--step--1);
+}
+
+.offer__prose > * + * { margin-block-start: var(--space-s); }
+
+.offer__prose strong { color: var(--text); }
+
+/* Links inside the pitch copy are tinted rather than underlined, matching
+   the original's coloured inline links. */
+.offer__prose a,
+.offer__note a,
+.offer-item__body a {
+  color: var(--edge);
+  border-bottom: 1px solid color-mix(in oklab, var(--edge) 45%, transparent);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.offer__prose a:hover,
+.offer__note a:hover,
+.offer-item__body a:hover {
+  color: var(--edge-bright);
+  border-bottom-color: var(--edge-bright);
+}
+
+/* The emphasised "explore the other services" line. */
+.offer__cross {
+  display: block;
+  margin-block-start: var(--space-m);
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+}
+
+.offer__cross a { color: var(--accent); border-bottom-color: color-mix(in oklab, var(--gold-500) 45%, transparent); }
+.offer__cross a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+
+/* Footnote-style bundling rules. */
+.offer__notes {
+  margin-block-start: var(--space-m);
+  padding-block-start: var(--space-s);
+  border-top: 1px solid var(--rule-edge);
+  text-align: left;
+}
+
+.offer__note {
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+/* Worked bundle examples. */
+.offer__examples {
+  margin-block-start: var(--space-m);
+  text-align: left;
+}
+
+.offer__examples-head {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.offer__examples ul {
+  display: grid;
+  gap: var(--space-s);
+  margin-block-start: var(--space-s);
+}
+
+.offer__examples li {
+  position: relative;
+  padding-inline-start: var(--space-m);
+  font-size: var(--step--1);
+  font-style: italic;
+  color: var(--text-soft);
+}
+
+.offer__examples li::before {
+  content: "\2660";
+  position: absolute;
+  inset-inline-start: 0;
+  font-style: normal;
+  font-size: 0.72em;
+  color: var(--accent);
+}
+
+.offer__book {
+  margin-block-start: var(--space-l);
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.offer__book a { color: var(--accent); border-bottom-color: color-mix(in oklab, var(--gold-500) 45%, transparent); }
+.offer__book a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+
+/* The calendar nudge. Deliberately the loudest thing in this column. */
+.offer__calendar {
+  margin-block-start: var(--space-s);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step--1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.offer__calendar a { color: var(--frame); border-bottom: 0; }
+.offer__calendar a:hover { color: var(--gold-400); }
+
+/* ---- Right column: numbered services ------------------------------------ */
+
+.offer__list { display: grid; }
+
+.offer-item {
+  padding-block: var(--space-l);
+  border-top: 1px solid var(--rule-edge);
+}
+
+.offer-item:first-child { border-top: 0; padding-block-start: 0; }
+
+/* "1 | Title" on one line, the number separated by a rule as on the
+   original. */
+.offer-item__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin-block-end: var(--space-s);
+}
+
+.offer-item__num {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-1);
+  color: var(--accent);
+}
+
+.offer-item__num::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 0.9em;
+  margin-inline-start: var(--space-xs);
+  vertical-align: -0.08em;
+  background: color-mix(in oklab, var(--edge) 60%, transparent);
+}
+
+.offer-item__title {
+  margin: 0;
+  font-size: var(--step-1);
+  letter-spacing: var(--track-snug);
+  color: var(--text);
+}
+
+.offer-item__body { font-size: var(--step-0); }
+.offer-item__body > * + * { margin-block-start: var(--space-s); }
+
+/* ---- Closing form band --------------------------------------------------
+   "Look. Use the Form." — the sign-off both offer pages share. */
+
+.use-form {
+  display: grid;
+  gap: clamp(var(--space-m), 1rem + 3vw, var(--space-2xl));
+  align-items: center;
+  padding-block: var(--section-y);
+  border-top: 2px solid var(--edge);
+}
+
+@media (min-width: 48rem) {
+  .use-form { grid-template-columns: auto 1fr; }
+}
+
+.use-form__title {
+  font-size: clamp(1.6rem, 0.9rem + 2.6vw, 2.6rem);
+  color: var(--text);
+}
+
+.use-form__body {
+  max-width: 34rem;
+  font-size: var(--step-0);
+  color: var(--text-soft);
+}
+
+/* ==========================================================================
+   ABOUT FEATURE
+   The long-form About block on the home page. Given its own banded surface
+   with cyan rules top and bottom so it reads as a distinct chapter rather
+   than another section of body copy.
+   ========================================================================== */
+
+.about-feature {
+  position: relative;
+  padding-block: var(--section-y);
+  border-block: 2px solid var(--edge);
+  background:
+    radial-gradient(80% 60% at 50% 0%, color-mix(in oklab, var(--cyan-600) 12%, transparent), transparent 70%),
+    var(--ink-800);
+}
+
+.about-feature__label {
+  margin-block-end: var(--space-l);
+  text-align: center;
+  font-size: clamp(2rem, 1rem + 4vw, 3.4rem);
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+
+.about-feature__grid {
+  display: grid;
+  gap: clamp(var(--space-l), 1rem + 4vw, var(--space-2xl));
+  align-items: start;
+}
+
+@media (min-width: 56rem) {
+  .about-feature__grid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+
+  /* The portrait rides alongside the copy rather than scrolling away. */
+  .about-feature__media-wrap {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-m));
+  }
+}
+
+.about-feature__name {
+  font-size: clamp(1.7rem, 1rem + 2.8vw, 2.6rem);
+  line-height: 1;
+  color: var(--text);
+}
+
+.about-feature__prose {
+  margin-block-start: var(--space-l);
+  font-size: var(--step-0);
+}
+
+.about-feature__prose > * + * { margin-block-start: var(--space-m); }
+.about-feature__prose p { max-width: 40rem; }
+.about-feature__prose strong { color: var(--text); }
+
+.about-feature__prose a {
+  color: var(--edge);
+  border-bottom: 1px solid color-mix(in oklab, var(--edge) 45%, transparent);
+}
+
+.about-feature__prose a:hover { color: var(--edge-bright); border-bottom-color: var(--edge-bright); }
+
+/* Closing lines, indented as on the original. */
+.about-feature__closing {
+  margin-block-start: var(--space-l);
+  padding-inline-start: var(--space-m);
+  border-inline-start: 2px solid color-mix(in oklab, var(--gold-500) 55%, transparent);
+}
+
+.about-feature__closing p { color: var(--text); }
+
+/* Signature block. */
+.about-feature__sign { margin-block-start: var(--space-xl); }
+
+.about-feature__signature {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: var(--step-2);
+  letter-spacing: var(--track-snug);
+  color: var(--accent);
+}
+
+.about-feature__role {
+  margin-block-start: var(--space-2xs);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+/* Portrait / video slot. */
+.about-feature__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border: 2px solid var(--frame);
+  background: linear-gradient(150deg, var(--ink-600), var(--ink-900) 70%);
+}
+
+.about-feature__media img { width: 100%; height: 100%; object-fit: cover; }
+
+.about-feature__media[data-placeholder]::after {
+  content: "\2660";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  color: color-mix(in oklab, var(--gold-500) 16%, transparent);
+}
+
+/* ==========================================================================
+   HERO LINKS
+   The two blocks of hero lettering are links on the original: the ACE /
+   SPADERS mark goes to Ace Advisor, "Let's Talk In The Truck" goes to the
+   Cybertruck. They keep their own styling and only pick up a hover lift, so
+   they never look like ordinary links.
+   ========================================================================== */
+
+a.hero-mark,
+a.hero-talk {
+  display: block;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.hero-mark:hover .hero-mark__ace,
+a.hero-mark:hover .hero-mark__spaders { filter: brightness(1.12); }
+
+a.hero-talk:hover .hero-talk__lets { filter: brightness(1.15); }
+
+/* The sheen speeds up on hover, so the lettering reads as live. */
+a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
+
+/* ==========================================================================
+   HEADER SOCIALS
+   The red-bordered icon strip at the right of the header on the original.
+   ========================================================================== */
+
+.socials {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0.3rem 0.45rem;
+  border: 2px solid var(--frame);
+  background: var(--ink-900);
+}
+
+.socials__link {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--bone-100);
+  transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.socials__link:hover { color: var(--accent); transform: translateY(-1px); }
+.socials__link svg { width: 100%; height: 100%; fill: currentColor; }
+
+/* Hidden in the header on small screens, where the burger needs the room —
+   the footer copy still carries them. */
+@media (max-width: 56rem) {
+  .header .socials { display: none; }
+}
+
+/* A cyan rule under the header, as on the original. */
+.header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 1px;
+  background: var(--edge);
+}
+
+/* ==========================================================================
+   MINIMAL FOOTER
+   The original footer is a single centred credit line above a cyan rule.
+   ========================================================================== */
+
+.footer-min {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--space-xl);
+  border-top: 1px solid var(--edge);
+  text-align: center;
+}
+
+.footer-min__credit {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--text-soft);
+}
+
+.footer-min__socials {
+  display: flex;
+  justify-content: center;
+  margin-block-end: var(--space-m);
+}
+
+/* ==========================================================================
+   CONTACT FORM PAGE
+   The form sits on a cream panel — the one light surface on the site, as on
+   the original. Everything inside it flips to dark-on-light, so the panel
+   declares its own local colours rather than inheriting the site's.
+   ========================================================================== */
+
+.form-intro { text-align: center; }
+
+.form-intro__eyebrow {
+  font-size: var(--step--1);
+  font-weight: var(--weight-semi);
+  color: var(--accent);
+}
+
+.form-intro__title {
+  margin-block-start: var(--space-2xs);
+  font-size: clamp(1.8rem, 1rem + 3.2vw, 3rem);
+  color: var(--accent);
+}
+
+.form-panel {
+  --panel-ink: #16181b;
+  --panel-muted: #6f6a5c;
+  width: min(38rem, 100%);
+  margin: var(--space-xl) auto 0;
+  padding: clamp(var(--space-m), 0.75rem + 2vw, var(--space-xl));
+  background: #fdf3d8;
+  color: var(--panel-ink);
+  border: 2px solid var(--frame);
+}
+
+.form-panel__title {
+  margin-block-end: var(--space-l);
+  text-align: center;
+  font-size: clamp(1.3rem, 0.9rem + 1.6vw, 1.9rem);
+  font-style: italic;
+  line-height: 1.15;
+  color: var(--panel-ink);
+}
+
+.form-panel__title u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Every field inside the panel is dark-on-cream. */
+.form-panel .field__label,
+.form-panel .fieldset__legend {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--panel-ink);
+}
+
+.form-panel .field__control {
+  background: #fffdf6;
+  border: 1px solid var(--panel-ink);
+  border-radius: 999px;
+  color: var(--panel-ink);
+}
+
+.form-panel textarea.field__control { border-radius: 12px; }
+
+.form-panel .field__control::placeholder { color: #8d8778; }
+
+.form-panel .field__control:hover { border-color: var(--frame); }
+
+.form-panel .field__control:focus {
+  border-color: var(--frame);
+  background: #fff;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--frame) 25%, transparent);
+}
+
+.form-panel .field__hint { color: var(--panel-muted); }
+
+/* Checkbox groups. Kept as a plain stack — these lists run long (the add-ons
+   alone are 22 items) and columns would make them harder to scan, not
+   easier. */
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset + .fieldset { margin-block-start: var(--space-l); }
+
+.fieldset__legend {
+  padding: 0;
+  margin-block-end: var(--space-2xs);
+}
+
+.checks { display: grid; gap: 0.15rem; }
+
+.check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2xs);
+  align-items: start;
+  padding-block: 0.18rem;
+  font-size: var(--step--1);
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.check input {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-block-start: 0.2rem;
+  accent-color: var(--frame);
+  cursor: pointer;
+}
+
+.check:hover { color: var(--frame); }
+
+/* Submit sits full width at the foot of the panel. */
+.form-panel__submit {
+  width: 100%;
+  margin-block-start: var(--space-l);
+  padding: 0.9em 2em;
+  border: 2px solid var(--panel-ink);
+  border-radius: 999px;
+  background: var(--panel-ink);
+  color: #fdf3d8;
+  font-size: var(--step-0);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.form-panel__submit:hover { background: var(--frame); border-color: var(--frame); color: #fff; }
+
+.form-panel__thanks {
+  margin-block-start: var(--space-l);
+  text-align: center;
+  font-size: var(--step--1);
+  color: #4f4a3f;
+}
+
+/* Closing notes under the panel, back on the dark page. */
+.form-notes {
+  display: grid;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-xl);
+  text-align: center;
+}
+
+.form-notes p {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--text-soft);
+}
+
+.form-notes p:first-child { color: var(--accent); }
