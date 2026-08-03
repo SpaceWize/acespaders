@@ -24,16 +24,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Inter:wght@400;500;600&display=swap">
 
 <!-- Load order matters: tokens defines the variables everything else reads. -->
-<link rel="stylesheet" href="assets/css/tokens.css?v=7">
-<link rel="stylesheet" href="assets/css/base.css?v=7">
-<link rel="stylesheet" href="assets/css/layout.css?v=7">
-<link rel="stylesheet" href="assets/css/components.css?v=7">
-<link rel="stylesheet" href="assets/css/pages.css?v=7">
+<link rel="stylesheet" href="assets/css/tokens.css?v=8">
+<link rel="stylesheet" href="assets/css/base.css?v=8">
+<link rel="stylesheet" href="assets/css/layout.css?v=8">
+<link rel="stylesheet" href="assets/css/components.css?v=8">
+<link rel="stylesheet" href="assets/css/pages.css?v=8">
 
 <!-- Set before first paint so reveal elements start hidden without a flash.
      With JS off the class is never added and everything renders visible. -->
 <script>document.documentElement.classList.add("js");</script>
-<script src="assets/js/main.js?v=7" defer></script>
+<script src="assets/js/main.js?v=8" defer></script>
 <!--/#HEAD-->
 </head>
 
@@ -73,88 +73,73 @@
 
 <main class="page" id="main">
 
-  <!-- ==================== OFFER ====================
-       Same two-column structure as ace-advisor.html: the pitch on the left,
-       the numbered services on the right. -->
+  <!-- ==================== MASTHEAD ====================
+       Same opening beat as ace-advisor.html so both paths read as siblings:
+       back link, eyebrow, big title, lede. The accent wash behind it is red
+       and teal here rather than gold, echoing the home page lettering. -->
+  <section class="masthead masthead--truck">
+    <div class="shell masthead__inner" data-reveal-group>
+      <a class="masthead__back" href="index.html" data-reveal>
+        <span class="masthead__back-arrow" aria-hidden="true">&larr;</span>
+        Back
+      </a>
+      <p class="eyebrow" data-reveal>The Cybertruck</p>
+      <h1 class="masthead__title">
+        <span class="masthead__title-lead">In The</span>
+        <span class="masthead__title-accent">Truck</span>
+      </h1>
+      <p class="masthead__lede" data-reveal>
+        The Cybertruck is a mobile fortress: a rolling office, professional
+        studio, and private counseling space built for performance and
+        comfort anywhere the road takes it.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== THE PITCH ==================== -->
   <section class="section">
-    <div class="shell offer">
+    <div class="shell shell--narrow">
 
-      <!-- ---------- LEFT: the pitch ---------- -->
-      <aside class="offer__aside" data-reveal>
-        <h1 class="offer__title">
-          Exclusive
-          <span class="offer__title-spade" aria-hidden="true">&#9828;</span>
-          &amp; Flexible
-        </h1>
+      <header class="section-head section-head--center" data-reveal>
+        <h2 class="rule-title">
+          <span>Exclusive</span>
+          <span class="rule-title__mark" aria-hidden="true">&#9824;</span>
+          <span>&amp; Flexible</span>
+        </h2>
+      </header>
 
-        <div class="offer__prose">
-          <p>
-            The Cybertruck is a mobile fortress: a rolling office, professional
-            studio, and private counseling space built for performance and
-            comfort anywhere the road takes it.
-          </p>
-          <p>
-            From confidential advisory sessions or complex film productions to
-            premium transport, vending, pop-up events, or custom content
-            creation. This vehicle is engineered to deliver unmatched
-            capability, presence, and flexibility.
-          </p>
-          <p><strong>No fixed location. No limitations.</strong></p>
-
-          <p class="offer__cross">
-            <a href="ace-advisor.html">Explore the other services listed</a> and
-            build the exact experience you need in the
-            <a href="contact.html">form below</a>.
-          </p>
-
-          <p>
-            These services are perfect for ambitious clients, creators, and
-            executives who want something very few can offer.
-          </p>
-
-          <p>
-            <a href="contact.html">See here for a full list of services.</a>
-          </p>
-        </div>
-
-        <div class="offer__notes">
-          <p class="offer__note">*Hire services individually or in bundles.</p>
-          <p class="offer__note">
-            **Can be bundled with services from
-            <a href="ace-advisor.html">Ace Advisor.</a>
-          </p>
-        </div>
-
-        <div class="offer__examples">
-          <p class="offer__examples-head">Examples of bundled Cybertruck Commissions:</p>
-          <ul>
-            <li>
-              Private Sessions in the Cybertruck + Fitness Activity Add-On +
-              Custom Coffee/Snack Add-On
-            </li>
-            <li>
-              Corporate Strategy Session + Premium Pickup &amp; Transport +
-              Mobile Vending Services
-            </li>
-            <li>
-              Pop-up Mobile Event + Custom Coffee/Snack Add-On + Premium
-              Pick-up &amp; Transport
-            </li>
-          </ul>
-        </div>
-
-        <p class="offer__book">
-          <a href="contact.html">Book Now</a> to Secure Your Spot on
-          <a href="contact.html">Ace&rsquo;s Calendar</a>.
+      <div class="prose" data-reveal>
+        <p>
+          From confidential advisory sessions or complex film productions to
+          premium transport, vending, pop-up events, or custom content
+          creation. This vehicle is engineered to deliver unmatched
+          capability, presence, and flexibility.
         </p>
-
-        <p class="offer__calendar">
-          Calendar is <a href="contact.html">always</a> filling up
-          <a href="contact.html">fast</a>!
+        <p><strong>No fixed location. No limitations.</strong></p>
+        <p class="prose__cross">
+          <a href="ace-advisor.html">Explore the other services listed</a> and
+          build the exact experience you need in the
+          <a href="contact.html">form below</a>.
         </p>
-      </aside>
+        <p>
+          These services are perfect for ambitious clients, creators, and
+          executives who want something very few can offer.
+        </p>
+        <p><a href="contact.html">See here for a full list of services.</a></p>
+      </div>
+    </div>
+  </section>
 
-      <!-- ---------- RIGHT: the services ---------- -->
+  <!-- ==================== WHAT IT COVERS ====================
+       The seven commissions, as numbered blocks. Same rhythm as the numbered
+       sections on the advisory page. -->
+  <section class="section section--raised">
+    <div class="shell shell--narrow">
+      <header class="section-head" data-reveal>
+        <p class="eyebrow">What it covers</p>
+        <h2>Seven ways to book it</h2>
+      </header>
+
       <div class="offer__list" data-reveal-group>
 
         <article class="offer-item" data-reveal>
@@ -277,23 +262,68 @@
           </div>
         </article>
 
-        <p class="pulse-btn-row" data-reveal>
-          <a class="pulse-btn" href="contact.html">Go Here</a>
-        </p>
       </div>
 
+      <div class="offer__notes" data-reveal>
+        <p class="offer__note">*Hire services individually or in bundles.</p>
+        <p class="offer__note">
+          **Can be bundled with services from
+          <a href="ace-advisor.html">Ace Advisor.</a>
+        </p>
+      </div>
     </div>
   </section>
 
-  <!-- ==================== USE THE FORM ==================== -->
+  <!-- ==================== BUNDLES ==================== -->
+  <section class="section">
+    <div class="shell shell--narrow">
+      <header class="section-head" data-reveal>
+        <p class="eyebrow">Put together</p>
+        <h2>Examples of bundled Cybertruck commissions</h2>
+      </header>
+
+      <div class="offer__examples" data-reveal>
+        <ul>
+          <li>
+            Private Sessions in the Cybertruck + Fitness Activity Add-On +
+            Custom Coffee/Snack Add-On
+          </li>
+          <li>
+            Corporate Strategy Session + Premium Pickup &amp; Transport +
+            Mobile Vending Services
+          </li>
+          <li>
+            Pop-up Mobile Event + Custom Coffee/Snack Add-On + Premium
+            Pick-up &amp; Transport
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
   <section class="section section--flush">
-    <div class="shell use-form" data-reveal>
+    <div class="shell shell--narrow use-form" data-reveal>
       <h2 class="use-form__title">Look. Use the Form.</h2>
       <p class="use-form__body">
         The Form is the best way to work with Ace. We will quote in USD and can
         discuss other payment options, such as eTransfer, BitC, G/S, or other
         currencies.
       </p>
+
+      <p class="offer__book">
+        <a href="contact.html">Book Now</a> to Secure Your Spot on
+        <a href="contact.html">Ace&rsquo;s Calendar</a>.
+      </p>
+      <p class="offer__calendar">
+        Calendar is <a href="contact.html">always</a> filling up
+        <a href="contact.html">fast</a>!
+      </p>
+
+      <div class="btn-row btn-row--center">
+        <a class="pulse-btn" href="contact.html">Go Here</a>
+        <a class="btn btn--ghost" href="ace-advisor.html"><span>Ace Advisor</span></a>
+      </div>
     </div>
   </section>
 
