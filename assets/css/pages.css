@@ -78,7 +78,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: var(--ink-900) url("../img/hero-poster.jpg?v=8") center / cover no-repeat;
+  background: var(--ink-900) url("../img/hero-poster-2.jpg") center / cover no-repeat;
 }
 
 .hero-overlay {
@@ -535,10 +535,20 @@
 }
 .rule-title__mark::after { transform: scaleX(-1); }
 
+/* A single-word title ("♤ Elevation") takes the spade as a leading ornament
+   rather than a divider, so the hairlines tuck in tighter and it does not
+   read as though a word is missing on the left. */
+.rule-title--lead .rule-title__mark::before,
+.rule-title--lead .rule-title__mark::after {
+  width: clamp(0.9rem, 2.2vw, 1.9rem);
+}
+
 /* Narrow screens: let it stack, otherwise the flex wrap strands the spade on
-   the end of the first word instead of dividing the two. */
+   the end of the first word instead of dividing the two. A leading ornament
+   is already on its own line, so it keeps the row. */
 @media (max-width: 34rem) {
   .rule-title { flex-direction: column; gap: var(--space-3xs); }
+  .rule-title--lead { flex-direction: row; }
 }
 
 /* ---- Body prose --------------------------------------------------------- */

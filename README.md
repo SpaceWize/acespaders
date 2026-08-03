@@ -25,7 +25,7 @@ assets/css/components.css   Buttons, cards, steps, quote, form, callout…
 assets/css/pages.css        Hero, paths, masthead, services, gallery
 assets/js/main.js           Header, nav, scroll-spy, reveals, scroll hero, form
 assets/img/                 Photographs, and the hero poster frame
-assets/video/               hero.mp4 + hero-720.mp4 — the scroll-scrubbed hero
+assets/video/               hero-2.mp4 + hero-small-2.mp4 — the scrubbed hero
 
 CNAME, .nojekyll, robots.txt, sitemap.xml   GitHub Pages + SEO plumbing
 ```
@@ -69,7 +69,7 @@ as you scroll down and reverses as you scroll back up.
 
 | Piece | How it works |
 |---|---|
-| **The video** | `assets/video/hero.mp4`, with `hero-720.mp4` served below 56rem. `main.js` maps scroll progress through `#home` onto `video.currentTime`. |
+| **The video** | `assets/video/hero-2.mp4`, with `hero-small-2.mp4` served below 56rem. `main.js` maps scroll progress through `#home` onto `video.currentTime`. |
 | **Scrub length** | The `height` on `.js .hero-split` — 300vh. Raise it to slow the scrub, lower it to speed it up. No JS change needed; the script reads the height. |
 | **ACE / SPADERS** | Drifts toward the cursor. SPADERS also tilts toward it, which gives the pair parallax rather than moving as one rigid block. |
 | **Let's Talk / In The Truck** | Shifts toward the cursor. "In The Truck" carries a sheen — a narrow highlight sweeping across a mostly-red gradient, clipped to the glyphs. |
@@ -88,20 +88,20 @@ To re-encode a new clip the same way:
 
 ```bash
 ffmpeg -i source.mp4 -an \
-  -vf "scale=1920:1080:flags=lanczos" \
-  -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 28 \
+  -vf "crop=1248:702:0:200,scale=1600:900:flags=lanczos" \
+  -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 27 \
   -g 1 -keyint_min 1 \
   -x264-params "keyint=1:min-keyint=1:scenecut=0:ref=1:bframes=0" \
   -movflags +faststart \
-  assets/video/hero.mp4
+  assets/video/hero-2.mp4
 ```
 
-Then the small-screen version (`scale=1280:720`, `-crf 30`, same flags) as
-`hero-720.mp4`, and a poster from the first frame:
+Then the small-screen version (`scale=1024:576`, `-crf 29`, same flags) as
+`hero-small-2.mp4`, and a poster from the first frame:
 
 ```bash
-ffmpeg -i source.mp4 -frames:v 1 -vf "scale=1600:900:flags=lanczos" \
-  -q:v 6 assets/img/hero-poster.jpg
+ffmpeg -i source.mp4 -frames:v 1 -vf "crop=1248:702:0:200,scale=1600:900:flags=lanczos" \
+  -q:v 6 assets/img/hero-poster-2.jpg
 ```
 
 Sanity check afterwards: `ffprobe -show_frames source.mp4 | grep -c key_frame=1`
@@ -112,6 +112,31 @@ plenty, because it is stretched across two viewports of scrolling.
 has downloaded, with JavaScript off, and for visitors who ask for reduced
 motion — in those last two cases the video is never fetched at all, so the
 poster is the entire hero.
+
+#### The number in the media filenames is deliberate — bump it
+
+```
+assets/video/hero-2.mp4
+assets/video/hero-small-2.mp4
+assets/img/hero-poster-2.jpg
+```
+
+**Whenever you replace one of these three files, rename it — `-2` becomes
+`-3` — and update the reference.** Two references, both easy to find: the
+`data-src` / `data-src-small` / `poster` attributes on the `<video>` in
+`index.html`, and the poster URL in `.hero-sticky::before` in `pages.css`.
+
+The `?v=N` query string used everywhere else is not enough for these. It only
+works if the new file is uploaded *before* the HTML that points at the new
+version. Upload them the other way round — HTML first, then the binary — and
+the browser fetches `hero.mp4?v=8`, gets the **old** bytes because the new
+ones have not landed yet, and caches those under the new URL. Bumping to
+`?v=9` would fix it, but only after someone works out what happened.
+
+A filename that has never existed before cannot have a stale cache entry, so
+renaming removes the ordering hazard entirely. This is also what makes the
+files safe to upload in any order through the GitHub web UI, which is the
+normal way these get replaced.
 
 #### If the hero scroll ever feels rough again
 
