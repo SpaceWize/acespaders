@@ -412,9 +412,9 @@
   color: var(--edge);
 }
 
-@media (max-width: 30rem) {
-  .paths { flex-direction: column; align-items: center; }
-  .paths__dash { margin-block: 0; width: 2.5rem; }
+@media (max-width: 40rem) {
+  .rule-title { flex-direction: column; gap: var(--space-3xs); }
+  .rule-title--lead { flex-direction: row; }
   .path { max-width: 17rem; width: 100%; }
 }
 
