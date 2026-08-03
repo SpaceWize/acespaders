@@ -169,15 +169,26 @@ Tracking is skipped entirely on touch screens (no cursor to follow) and when
 reduced motion is requested. In both cases the properties stay at 0 and
 everything simply sits still — the layout is identical either way.
 
-### Photographs still needed
+### The two path cards
 
-The slots are built and correctly sized; each is a one-line swap. Drop an
-`<img>` into the slot and delete its `data-placeholder` attribute.
+Both slots are filled:
 
-| File | Where | Notes |
+| File | Card | Notes |
 |---|---|---|
-| `assets/img/path-cybertruck.jpg` | paths | square |
-| `assets/img/path-advisor.jpg` | paths | square |
+| `assets/img/path-cybertruck-1.jpg` | Cybertruck | 800×800 |
+| `assets/img/path-advisor-1.jpg` | Ace Advisor | 800×800 |
+
+**They must be square.** `.path__media` is `aspect-ratio: 1` and the image is
+`object-fit: cover`, so a non-square file gets centre-cropped — on the truck
+shot that would eat the skyline, which is the whole point of the framing.
+
+Like the hero media, these carry a number: replacing one means renaming it
+(`-1` → `-2`) and updating the `src` in `index.html`. Same reason — see
+"The number in the media filenames is deliberate" above.
+
+To swap one out, replace the `<img>` inside `<span class="path__media">`. If
+you ever want the placeholder back, empty the span and add `data-placeholder`
+to it; the spade watermark is styled off that attribute.
 
 ### Adding the Cybertruck photograph
 
