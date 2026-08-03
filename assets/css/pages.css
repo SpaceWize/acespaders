@@ -78,7 +78,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: var(--ink-900) url("../img/hero-poster.jpg?v=7") center / cover no-repeat;
+  background: var(--ink-900) url("../img/hero-poster.jpg?v=8") center / cover no-repeat;
 }
 
 .hero-overlay {
@@ -437,15 +437,128 @@
   background: radial-gradient(60% 80% at 15% 0%, color-mix(in oklab, var(--gold-600) 18%, transparent), transparent 68%);
 }
 
+/* The truck page swaps the gold wash for the red-and-teal pairing the home
+   page uses on ACE / SPADERS, so the two path pages read as siblings without
+   being identical in colour. */
+.masthead--truck::before {
+  background:
+    radial-gradient(52% 74% at 12% 0%, color-mix(in oklab, var(--red-500) 20%, transparent), transparent 68%),
+    radial-gradient(46% 68% at 88% 8%, color-mix(in oklab, var(--cyan-500) 16%, transparent), transparent 70%);
+}
+
+/* The advisory page takes the same treatment with the accents swapped, so the
+   two paths are clearly a pair without being interchangeable. */
+.masthead--advisor::before {
+  background:
+    radial-gradient(52% 74% at 12% 0%, color-mix(in oklab, var(--gold-600) 22%, transparent), transparent 68%),
+    radial-gradient(46% 68% at 88% 8%, color-mix(in oklab, var(--cyan-500) 16%, transparent), transparent 70%);
+}
+
+.masthead--advisor .masthead__title-accent { color: var(--accent); }
+
 .masthead__inner { position: relative; z-index: 1; }
 
 .masthead__title { font-size: var(--step-5); }
+
+/* Two-tone title, echoing gold ACE over red SPADERS on the home page. */
+.masthead__title-lead,
+.masthead__title-accent { display: block; }
+.masthead__title-accent { color: var(--frame); }
 
 .masthead__lede {
   max-width: 42rem;
   margin-block-start: var(--space-m);
   font-size: var(--step-1);
   color: var(--text-soft);
+}
+
+/* ---- Back link ----------------------------------------------------------
+   Shared by both path pages. */
+
+.masthead__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-block-end: var(--space-m);
+  font-size: var(--step--1);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--text-soft);
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.masthead__back:hover { color: var(--edge-bright); }
+
+.masthead__back-arrow {
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.masthead__back:hover .masthead__back-arrow { transform: translateX(-4px); }
+
+/* ---- Rule title ---------------------------------------------------------
+   "Exclusive ♠ & Flexible". The spade used to sit on its own line, where it
+   read as an orphan floating above the second word rather than as a divider.
+   It is now inline and vertically centred between the two halves, with the
+   hairlines making it clearly deliberate. */
+
+.rule-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-s);
+  font-size: clamp(1.9rem, 1rem + 3.4vw, 3rem);
+  line-height: 1;
+}
+
+.rule-title__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Cap-height rather than em-box, so the glyph optically centres on the
+     lettering instead of riding high. */
+  font-size: 0.52em;
+  line-height: 1;
+  transform: translateY(0.06em);
+  color: var(--accent);
+  text-shadow: 0 0 18px color-mix(in oklab, var(--gold-500) 45%, transparent);
+}
+
+/* Hairlines either side, fading out, in the brand teal. */
+.rule-title__mark::before,
+.rule-title__mark::after {
+  content: "";
+  width: clamp(1.5rem, 4vw, 3.25rem);
+  height: 1px;
+  margin-inline: var(--space-xs);
+  background: linear-gradient(90deg, transparent, var(--rule-edge));
+}
+.rule-title__mark::after { transform: scaleX(-1); }
+
+/* Narrow screens: let it stack, otherwise the flex wrap strands the spade on
+   the end of the first word instead of dividing the two. */
+@media (max-width: 34rem) {
+  .rule-title { flex-direction: column; gap: var(--space-3xs); }
+}
+
+/* ---- Body prose --------------------------------------------------------- */
+
+.prose { font-size: var(--step-0); }
+.prose > * + * { margin-block-start: var(--space-s); }
+.prose strong { color: var(--text); }
+
+.prose a,
+.prose__cross a {
+  color: var(--edge);
+  border-bottom: 1px solid color-mix(in oklab, var(--cyan-500) 40%, transparent);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.prose a:hover,
+.prose__cross a:hover { color: var(--edge-bright); border-bottom-color: var(--edge-bright); }
+
+.prose__cross {
+  padding-block: var(--space-s);
+  border-block: 1px solid var(--rule-faint);
 }
 
 /* ---- Left column: the pitch --------------------------------------------- */
@@ -582,9 +695,25 @@
 .offer__list { display: grid; }
 
 .offer-item {
+  position: relative;
   padding-block: var(--space-l);
   border-top: 1px solid var(--rule-edge);
 }
+
+/* A red tick that draws itself along the teal hairline on hover — the same
+   red/teal pairing the home page uses, applied at component scale. */
+.offer-item::before {
+  content: "";
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline-start: 0;
+  width: 0;
+  height: 1px;
+  background: var(--frame);
+  transition: width var(--dur) var(--ease);
+}
+
+.offer-item:hover::before { width: 4rem; }
 
 .offer-item:first-child { border-top: 0; padding-block-start: 0; }
 
