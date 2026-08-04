@@ -214,12 +214,19 @@
      ---------------------------------------------------------------------- */
 
   function initCursor() {
-    var stage = document.querySelector("[data-cursor-stage]");
-    if (!stage) return;
+    var stages = document.querySelectorAll("[data-cursor-stage]");
+    if (!stages.length) return;
 
     if (REDUCED_MOTION.matches) return;
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
 
+    Array.prototype.forEach.call(stages, trackStage);
+  }
+
+  // One independent tracker per stage — the hero on the home page, the
+  // locality note under the contact form. Each writes --mx / --my on itself
+  // and knows nothing about what reads them; the movement is all in CSS.
+  function trackStage(stage) {
     var pending = false;
     var mx = 0;
     var my = 0;
@@ -279,6 +286,12 @@
     var mailto = form.getAttribute("data-mailto");
     if (!mailto) return;
 
+    var handoff = document.querySelector("[data-form-handoff]");
+    var textEl = handoff && handoff.querySelector("[data-handoff-text]");
+    var copyBtn = handoff && handoff.querySelector("[data-handoff-copy]");
+    var mailLink = handoff && handoff.querySelector("[data-handoff-mail]");
+    var truncNote = handoff && handoff.querySelector("[data-handoff-trunc]");
+
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -311,33 +324,57 @@
       var name = (byName["First & Last Name"] || byName.name || [""])[0];
       var subject = "Enquiry — " + (name || "Ace Spaders");
 
-      var href =
+      // Long mailto: URLs get truncated by some mail clients, so past a safe
+      // length the mail we open carries the subject only and the full text
+      // stays on the page for the visitor to copy.
+      var full =
         "mailto:" + mailto +
         "?subject=" + encodeURIComponent(subject) +
         "&body=" + encodeURIComponent(body);
+      var short = "mailto:" + mailto + "?subject=" + encodeURIComponent(subject);
+      var href = full.length > 1900 ? short : full;
 
-      // mailto: URLs get truncated by some clients past a couple of thousand
-      // characters. This form can exceed that, so fall back to a plain
-      // subject-only mail and put the details on the clipboard instead.
-      if (href.length > 1900 && navigator.clipboard) {
-        navigator.clipboard.writeText(body).then(
-          function () {
-            window.alert(
-              "Your answers have been copied to the clipboard — please paste " +
-              "them into the email that opens."
-            );
-            window.location.href =
-              "mailto:" + mailto + "?subject=" + encodeURIComponent(subject);
-          },
-          function () {
-            window.location.href = href;
-          }
-        );
-        return;
+      // Show the panel BEFORE handing off to the mail client. A mailto: with
+      // no registered handler does nothing at all — no error, no navigation —
+      // which is how a submission silently disappears. With the panel already
+      // up, the visitor always has the text and the address in front of them.
+      if (handoff) {
+        if (textEl) textEl.value = body;
+        if (mailLink) mailLink.href = href;
+        if (truncNote) truncNote.hidden = full.length <= 1900;
+        handoff.hidden = false;
+        handoff.scrollIntoView({ block: "start", behavior: "smooth" });
       }
 
       window.location.href = href;
     });
+
+    /* -- copy button ------------------------------------------------------ */
+    if (copyBtn && textEl) {
+      copyBtn.addEventListener("click", function () {
+        function done(ok) {
+          var label = copyBtn.querySelector("span") || copyBtn;
+          label.textContent = ok ? "Copied" : "Press Ctrl/Cmd + C";
+          window.setTimeout(function () {
+            label.textContent = "Copy the message";
+          }, 2400);
+        }
+
+        // Select it either way: on failure that leaves the text ready for a
+        // manual copy rather than leaving the visitor stuck.
+        textEl.focus();
+        textEl.select();
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textEl.value).then(
+            function () { done(true); },
+            function () { done(false); }
+          );
+          return;
+        }
+        done(false);
+      });
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -416,6 +453,11 @@
 
       var settled = Math.abs(target - eased) < SETTLED;
       if (settled) eased = target;
+
+      // Publish progress for CSS. The lettering slides left across the scrub
+      // by reading this; nothing here knows that, so retuning the movement —
+      // or removing it — is a CSS-only change.
+      section.style.setProperty("--hero-progress", eased.toFixed(4));
 
       if (ready && duration) {
         var t = eased * duration;

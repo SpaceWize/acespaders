@@ -99,6 +99,17 @@
   gap: var(--space-m);
   padding-block: calc(var(--header-h) + var(--space-2xl)) var(--space-2xl);
   text-align: center;
+
+  /* --hero-progress is written by main.js as you scroll through the hero: 0
+     at the top, 1 at the bottom. The lettering slides left across that range
+     while the shot keeps running, so the two move against each other instead
+     of sitting still together.
+
+     It stays at 0 with JavaScript off and under reduced motion (the scrub
+     never starts, so the property is never written), and the block simply
+     sits centred. */
+  transform: translate3d(calc(var(--hero-progress, 0) * -16vw), 0, 0);
+  will-change: transform;
 }
 /* Red and teal washes behind the lettering — the only colour in the hero now
    that the photographs are gone. */
@@ -456,7 +467,51 @@
 
 .masthead--advisor .masthead__title-accent { color: var(--accent); }
 
-.masthead__inner { position: relative; z-index: 1; }
+/* Text left, photograph right, once there is room for two columns. Below
+   that they stack and the picture follows the lede. */
+.masthead__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+@media (min-width: 56rem) {
+  .masthead__inner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: var(--space-2xl);
+  }
+}
+
+.masthead__media {
+  margin: 0;
+  align-self: center;
+  justify-self: center;
+  width: min(100%, 26rem);
+}
+
+.masthead__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+/* Same frame language as the two path cards on the home page: a hairline in
+   the page's own accent, lifting on hover. The accent differs per page, so
+   the colour comes from a variable each masthead sets. */
+.masthead__media--frame {
+  position: relative;
+  padding: 3px;
+  border: 2px solid var(--masthead-frame, var(--frame));
+  background: var(--ink-900);
+  box-shadow: 0 0 34px -12px color-mix(in oklab, var(--masthead-frame, var(--frame)) 70%, transparent);
+}
+
+.masthead--truck { --masthead-frame: var(--frame); }
+.masthead--advisor { --masthead-frame: var(--accent); }
 
 .masthead__title { font-size: var(--step-5); }
 
@@ -1130,17 +1185,93 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
 }
 
 /* Closing notes under the panel, back on the dark page. */
+/* ---- After-submit handoff ----------------------------------------------
+   Shown once the form is submitted. Deliberately loud: if the mail app did
+   not open, this is the only thing standing between a real enquiry and a
+   silently lost one. */
+
+.handoff {
+  margin-block-start: var(--space-xl);
+  padding: var(--space-l);
+  border: 2px solid var(--accent);
+  background: color-mix(in oklab, var(--ink-900) 92%, var(--gold-600));
+  box-shadow: 0 0 40px -14px color-mix(in oklab, var(--gold-500) 70%, transparent);
+}
+
+.handoff[hidden] { display: none; }
+
+.handoff__title {
+  font-size: var(--step-2);
+  color: var(--accent);
+}
+
+.handoff__body {
+  margin-block-start: var(--space-s);
+  color: var(--text-soft);
+}
+.handoff__body strong { color: var(--text); }
+.handoff__body a { color: var(--edge); border-bottom: 1px solid currentColor; }
+
+.handoff__text {
+  width: 100%;
+  margin-block-start: var(--space-m);
+  padding: var(--space-s);
+  border: 1px solid var(--rule-edge);
+  background: var(--ink-900);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--step--1);
+  line-height: var(--leading-normal);
+  resize: vertical;
+}
+
+.handoff .btn-row { margin-block-start: var(--space-m); }
+
+/* The where-we-work note under the form. Small, but framed and drifting so
+   it does not read as fine print. */
 .form-notes {
+  position: relative;
   display: grid;
   gap: var(--space-2xs);
-  margin-block-start: var(--space-xl);
+  width: fit-content;
+  margin-inline: auto;
+  margin-block-start: var(--space-2xl);
+  padding: var(--space-m) var(--space-l);
+  border: 1px solid var(--rule-edge);
+  background: color-mix(in oklab, var(--ink-900) 55%, transparent);
   text-align: center;
 }
+
+/* Corner ticks in the brand red, so it reads as a plate rather than a box. */
+.form-notes::before,
+.form-notes::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 0 solid var(--frame);
+}
+.form-notes::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.form-notes::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
 
 .form-notes p {
   font-size: var(--step--1);
   font-weight: var(--weight-medium);
+  letter-spacing: var(--track-wide);
   color: var(--text-soft);
+  /* Each line reads --mx / --my at its own strength — --i is set per line in
+     the markup — so they fan out slightly under the pointer rather than
+     sliding as one rigid block. */
+  transform: translate3d(
+    calc(var(--mx, 0) * (4px + var(--i, 0) * 2px)),
+    calc(var(--my, 0) * (2px + var(--i, 0) * 1px)),
+    0
+  );
+  transition: transform 300ms var(--ease-out-soft);
 }
 
-.form-notes p:first-child { color: var(--accent); }
+.form-notes p:first-child {
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.form-notes p:nth-child(3) { color: var(--edge); }

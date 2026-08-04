@@ -229,6 +229,20 @@
 .row__value a { border-bottom: 1px solid var(--rule); transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .row__value a:hover { color: var(--accent-bright); border-color: var(--accent-bright); }
 
+/* A condition attached to a row value — "visit by appointment only" under the
+   street address. Sits on its own line so it cannot be read as part of it. */
+.row__note {
+  display: inline-block;
+  margin-block-start: var(--space-2xs);
+  padding: 0.25em 0.7em;
+  border: 1px solid color-mix(in oklab, var(--gold-500) 45%, transparent);
+  font-size: var(--step--1);
+  font-weight: 500;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 @media (max-width: 34rem) {
   .row { grid-template-columns: 1fr; gap: var(--space-3xs); }
 }
