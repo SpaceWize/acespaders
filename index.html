@@ -29,16 +29,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Inter:wght@400;500;600&display=swap">
 
 <!-- Load order matters: tokens defines the variables everything else reads. -->
-<link rel="stylesheet" href="assets/css/tokens.css?v=11">
-<link rel="stylesheet" href="assets/css/base.css?v=11">
-<link rel="stylesheet" href="assets/css/layout.css?v=11">
-<link rel="stylesheet" href="assets/css/components.css?v=11">
-<link rel="stylesheet" href="assets/css/pages.css?v=11">
+<link rel="stylesheet" href="assets/css/tokens.css?v=14">
+<link rel="stylesheet" href="assets/css/base.css?v=14">
+<link rel="stylesheet" href="assets/css/layout.css?v=14">
+<link rel="stylesheet" href="assets/css/components.css?v=14">
+<link rel="stylesheet" href="assets/css/pages.css?v=14">
 
 <!-- Set before first paint so reveal elements start hidden without a flash.
      With JS off the class is never added and everything renders visible. -->
 <script>document.documentElement.classList.add("js");</script>
-<script src="assets/js/main.js?v=11" defer></script>
+<script src="assets/js/main.js?v=14" defer></script>
 <!--/#HEAD-->
 </head>
 
@@ -60,8 +60,9 @@
 
       <ul class="nav__list" id="primary-nav" data-nav-list>
         <li class="nav__item" style="--i:0"><a class="nav__link" href="#home" aria-current="page">Home</a></li>
-        <li class="nav__item" style="--i:1"><a class="nav__link" href="#about">About</a></li>
-        <li class="nav__item" style="--i:2"><a class="nav__link" href="contact.html">Contact</a></li>
+        <li class="nav__item" style="--i:1"><a class="nav__link" href="#work">Work</a></li>
+        <li class="nav__item" style="--i:2"><a class="nav__link" href="#about">About</a></li>
+        <li class="nav__item" style="--i:3"><a class="nav__link" href="contact.html">Contact</a></li>
       </ul>
     </nav>
 
@@ -175,6 +176,85 @@
       </div>
 
       <p class="paths__note" data-reveal>Paths May Intersect</p>
+    </div>
+  </section>
+
+  <!-- ==================== WORK ====================
+       Three framings of the same drive, each scrubbed by the cursor rather
+       than played on a timer — the same idea as the hero, with distance
+       standing in for scroll position.
+
+       The mapping: 70px outside a tile's border is the first frame, the
+       tile's centre is the last, and everything between is proportional.
+       Moving away runs it backwards. Because it is a position rather than a
+       playback, it reverses exactly and never has to be restarted.
+
+       Each clip is encoded all-intra (every frame a keyframe), which is what
+       makes seeking to an arbitrary time cheap enough to do once a frame —
+       see the README note on the hero for why an ordinary encode stutters.
+
+       Video is fetched only as the section nears the viewport, and scrubbing
+       waits until the clip is fully buffered; the poster carries the tile
+       until then, and for anyone on a touch screen or asking for reduced
+       motion it is the whole tile.
+
+       ADDING WORK — copy a <figure>. Captions describe what is actually on
+       offer; do not write up a job that did not happen. -->
+  <section class="section section--raised" id="work">
+    <div class="shell">
+      <header class="section-head section-head--center" data-reveal>
+        <p class="eyebrow eyebrow--center">The Work</p>
+        <h2>Out On The Road</h2>
+      </header>
+
+      <div class="work" data-reveal-group>
+
+        <figure class="work__item" data-work data-reveal>
+          <span class="work__frame">
+            <video class="work__video" data-work-video
+                   data-src="assets/video/work-wide-1.mp4?v=14"
+                   poster="assets/img/work-wide-1.jpg?v=14"
+                   muted playsinline preload="none"
+                   disablepictureinpicture disableremoteplayback
+                   aria-hidden="true" tabindex="-1"></video>
+          </span>
+          <figcaption class="work__caption">
+            <span class="work__caption-title">Premium Pickup &amp; Transport</span>
+            <span class="work__caption-body">Chauffeured for the day or the week. Airport runs, spontaneous date nights, en-route strategy talks.</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work__item" data-work data-reveal>
+          <span class="work__frame">
+            <video class="work__video" data-work-video
+                   data-src="assets/video/work-bend-1.mp4?v=14"
+                   poster="assets/img/work-bend-1.jpg?v=14"
+                   muted playsinline preload="none"
+                   disablepictureinpicture disableremoteplayback
+                   aria-hidden="true" tabindex="-1"></video>
+          </span>
+          <figcaption class="work__caption">
+            <span class="work__caption-title">On Location</span>
+            <span class="work__caption-body">Boots on the ground, locally or abroad. Assessing complex situations and opportunities in person.</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work__item" data-work data-reveal>
+          <span class="work__frame">
+            <video class="work__video" data-work-video
+                   data-src="assets/video/work-close-1.mp4?v=14"
+                   poster="assets/img/work-close-1.jpg?v=14"
+                   muted playsinline preload="none"
+                   disablepictureinpicture disableremoteplayback
+                   aria-hidden="true" tabindex="-1"></video>
+          </span>
+          <figcaption class="work__caption">
+            <span class="work__caption-title">Private Sessions</span>
+            <span class="work__caption-body">Confidential coaching and consulting from the passenger seat. No fixed location, no limitations.</span>
+          </figcaption>
+        </figure>
+
+      </div>
     </div>
   </section>
 

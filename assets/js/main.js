@@ -384,8 +384,8 @@
       clearErrors();
 
       // Serialise every field generically, so adding or removing inputs in the
-      // markup needs no change here. Checkbox groups share a name and are
-      // collected into one comma-separated line.
+      // markup needs no change here. Checkbox groups share a name, so their
+      // values collect under one key.
       var groups = [];
       var byName = {};
 
@@ -399,14 +399,79 @@
         byName[key].push(value);
       });
 
-      var body = groups
-        .map(function (key) {
-          var vals = byName[key];
-          return vals.length > 1
-            ? key + ":\n  - " + vals.join("\n  - ")
-            : key + ": " + vals[0];
-        })
-        .join("\n\n");
+      /* Two renderings of the same answers.
+
+         `body` is plain text and is what the compose links carry — mailto:
+         and Gmail's body parameter accept nothing else, so the structure has
+         to come from bullets, indentation and blank lines rather than markup.
+
+         `html` is the same thing with real headings, lists and an indented
+         block for free text. It goes on the clipboard alongside the plain
+         text, so pasting into Gmail — a rich text editor — gives the
+         formatted version. */
+
+      /* How a field is rendered follows what kind of input it is, not how
+         long the answer happens to be — so "Cybertruck Services" bullets even
+         when only one box is ticked, and the notes fields sit in their own
+         block even when the answer is short. Length alone made a one-choice
+         group look like a plain sentence and buried short notes mid-line. */
+      var kindOf = {};
+      Array.prototype.forEach.call(form.elements, function (el) {
+        if (!el.name || kindOf[el.name]) return;
+        if (el.type === "checkbox") kindOf[el.name] = "list";
+        else if (el.tagName === "TEXTAREA" || el.hasAttribute("data-longform")) kindOf[el.name] = "block";
+      });
+
+      function esc(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      var textParts = [];
+      var htmlParts = [];
+
+      groups.forEach(function (key) {
+        var vals = byName[key];
+        var kind = kindOf[key];
+
+        if (kind === "list" || vals.length > 1) {
+          // Chosen options: one bullet each, however many were ticked.
+          textParts.push(key + ":\n" + vals.map(function (v) { return "  • " + v; }).join("\n"));
+          htmlParts.push(
+            "<p style=\"margin:0 0 4px\"><strong>" + esc(key) + ":</strong></p>" +
+            "<ul style=\"margin:0 0 14px;padding-left:22px\">" +
+            vals.map(function (v) { return "<li>" + esc(v) + "</li>"; }).join("") +
+            "</ul>"
+          );
+          return;
+        }
+
+        var val = vals[0];
+
+        if (kind === "block") {
+          // Their own words: set apart so it reads as prose rather than
+          // running on from the label.
+          var indented = val.split("\n").map(function (line) { return "    " + line; }).join("\n");
+          textParts.push(key + ":\n" + indented);
+          htmlParts.push(
+            "<p style=\"margin:0 0 4px\"><strong>" + esc(key) + ":</strong></p>" +
+            '<div style="margin:0 0 14px 22px;padding-left:12px;border-left:3px solid #d9d9d9;color:#444">' +
+            esc(val).replace(/\n/g, "<br>") + "</div>"
+          );
+          return;
+        }
+
+        // A single fact: keep it on the label's line.
+        textParts.push(key + ": " + val);
+        htmlParts.push(
+          "<p style=\"margin:0 0 10px\"><strong>" + esc(key) + ":</strong> " + esc(val) + "</p>"
+        );
+      });
+
+      var body = textParts.join("\n\n");
+      var html =
+        '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5">' +
+        htmlParts.join("") +
+        "</div>";
 
       var name = (byName["First & Last Name"] || byName.name || [""])[0];
       var subject = "Enquiry — " + (name || "Ace Spaders");
@@ -452,6 +517,7 @@
       // unasked would be worse. The visitor picks the route they actually use.
       if (handoff) {
         if (textEl) textEl.value = body;
+        if (copyBtn) copyBtn.setAttribute("data-html", html);
         if (mailLink) mailLink.href = mailHref;
         if (gmailLink) gmailLink.href = gmailHref;
         if (outlookLink) outlookLink.href = outlookHref;
@@ -461,30 +527,64 @@
       }
     });
 
-    /* -- copy button ------------------------------------------------------ */
+    /* -- copy button ------------------------------------------------------
+       Copies the message in two flavours at once: text/html and text/plain.
+       Gmail's compose window is a rich text editor, so pasting there picks up
+       the HTML and the enquiry arrives with bold labels, real bullets and the
+       free writing set off in its own block — the formatting a compose URL
+       cannot carry. Anywhere that only understands plain text gets the plain
+       text, so nothing is lost either way. */
+
     if (copyBtn && textEl) {
       copyBtn.addEventListener("click", function () {
-        function done(ok) {
+        function done(state) {
           var label = copyBtn.querySelector("span") || copyBtn;
-          label.textContent = ok ? "Copied" : "Press Ctrl/Cmd + C";
+          label.textContent =
+            state === "rich" ? "Copied — paste into your email" :
+            state === "plain" ? "Copied" :
+            "Press Ctrl/Cmd + C";
           window.setTimeout(function () {
             label.textContent = "Copy the message";
-          }, 2400);
+          }, 3200);
         }
 
-        // Select it either way: on failure that leaves the text ready for a
-        // manual copy rather than leaving the visitor stuck.
+        // Select it either way: if the clipboard API is refused, that leaves
+        // the text ready for a manual copy rather than leaving them stuck.
         textEl.focus();
         textEl.select();
 
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(textEl.value).then(
-            function () { done(true); },
-            function () { done(false); }
-          );
-          return;
+        var richHtml = copyBtn.getAttribute("data-html") || "";
+
+        // ClipboardItem is what allows both flavours on the clipboard at once.
+        if (richHtml && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+          try {
+            var item = new window.ClipboardItem({
+              "text/html": new Blob([richHtml], { type: "text/html" }),
+              "text/plain": new Blob([textEl.value], { type: "text/plain" })
+            });
+            navigator.clipboard.write([item]).then(
+              function () { done("rich"); },
+              function () { plainCopy(); }
+            );
+            return;
+          } catch (err) {
+            // Older browsers throw on the ClipboardItem constructor.
+            plainCopy();
+            return;
+          }
         }
-        done(false);
+        plainCopy();
+
+        function plainCopy() {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textEl.value).then(
+              function () { done("plain"); },
+              function () { done(false); }
+            );
+            return;
+          }
+          done(false);
+        }
       });
     }
   }
@@ -691,6 +791,203 @@
 
   /* ---------------------------------------------------------------------- */
 
+  /* ------------------------------------------------------------------------
+     Work tiles
+     Each tile holds a short clip that never plays. Its position in the clip
+     is set from how close the cursor is — the same idea as the hero, with
+     distance standing in for scroll:
+
+       70px outside the tile's border ... first frame
+       the tile's centre ............... last frame
+       between ........................ proportional
+
+     Because it is a position rather than a playback, moving away runs it
+     backwards exactly, and it never has to be stopped, restarted or
+     reversed.
+
+     The 70px is measured along the line from the tile's centre through the
+     cursor, so it means the same thing whichever side you approach from — a
+     wide tile does not trigger early at its long edges.
+     ---------------------------------------------------------------------- */
+
+  function initWork() {
+    var items = document.querySelectorAll("[data-work]");
+    if (!items.length) return;
+
+    // No pointer to approach, or reduced motion asked for: leave the posters
+    // showing with their captions, and never fetch the clips.
+    if (
+      REDUCED_MOTION.matches ||
+      !window.matchMedia("(hover: hover) and (pointer: fine)").matches
+    ) {
+      Array.prototype.forEach.call(items, function (el) {
+        el.classList.add("is-static");
+      });
+      return;
+    }
+
+    var MARGIN = 70;      // how far outside the border the clip starts
+    var EASE = 0.18;      // how hard the clip chases the cursor
+    var SETTLED = 0.001;  // close enough to stop the loop
+    var MIN_SEEK = 1 / 48;
+
+    var tiles = Array.prototype.map.call(items, function (el) {
+      return {
+        el: el,
+        video: el.querySelector("[data-work-video]"),
+        target: 0,
+        eased: 0,
+        ready: false,
+        duration: 0
+      };
+    });
+
+    var px = -99999;
+    var py = -99999;
+    var running = false;
+
+    /* -- how far through the clip this tile should be --------------------- */
+    function progressFor(tile) {
+      var r = tile.el.getBoundingClientRect();
+      if (!r.width || !r.height) return 0;
+
+      var cx = r.left + r.width / 2;
+      var cy = r.top + r.height / 2;
+      var vx = px - cx;
+      var vy = py - cy;
+      var dist = Math.sqrt(vx * vx + vy * vy);
+      if (dist === 0) return 1;
+
+      // Where the line from the centre through the cursor crosses the border.
+      var hw = r.width / 2;
+      var hh = r.height / 2;
+      var tx = vx === 0 ? Infinity : (hw * dist) / Math.abs(vx);
+      var ty = vy === 0 ? Infinity : (hh * dist) / Math.abs(vy);
+      var border = Math.min(tx, ty);
+
+      var outer = border + MARGIN;
+      var p = 1 - dist / outer;
+      return p < 0 ? 0 : p > 1 ? 1 : p;
+    }
+
+    function tick() {
+      var busy = false;
+
+      for (var i = 0; i < tiles.length; i++) {
+        var t = tiles[i];
+        t.target = progressFor(t);
+        t.eased += (t.target - t.eased) * EASE;
+
+        var settled = Math.abs(t.target - t.eased) < SETTLED;
+        if (settled) t.eased = t.target;
+        else busy = true;
+
+        t.el.classList.toggle("is-near", t.target > 0);
+
+        if (t.ready && t.duration) {
+          var time = t.eased * t.duration;
+          if (time > t.duration - 0.001) time = t.duration - 0.001;
+          // Assigning currentTime mid-seek redirects it rather than queueing,
+          // which is what keeps a fast sweep across the row from backing up.
+          if (Math.abs(t.video.currentTime - time) > MIN_SEEK) {
+            t.video.currentTime = time;
+          }
+        }
+      }
+
+      if (!busy) {
+        running = false;
+        return;
+      }
+      window.requestAnimationFrame(tick);
+    }
+
+    function wake() {
+      if (running) return;
+      running = true;
+      window.requestAnimationFrame(tick);
+    }
+
+    window.addEventListener(
+      "pointermove",
+      function (event) {
+        px = event.clientX;
+        py = event.clientY;
+        wake();
+      },
+      { passive: true }
+    );
+
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", wake, { passive: true });
+
+    document.addEventListener("pointerleave", function () {
+      px = -99999;
+      py = -99999;
+      wake();
+    });
+
+    /* -- loading ----------------------------------------------------------
+       Three clips is a megabyte and a half, and the section is well below
+       the fold, so nothing is fetched until it is nearly in view. Scrubbing
+       then waits for the clip to be buffered end to end: seeking through a
+       half-downloaded file turns every frame into a range request, which is
+       the stutter this is meant to avoid. */
+
+    function load(tile) {
+      var v = tile.video;
+      if (!v || v.getAttribute("src")) return;
+
+      v.addEventListener("loadedmetadata", function () {
+        tile.duration = v.duration || 0;
+      });
+
+      function check() {
+        if (tile.ready || !tile.duration) return;
+        var b = v.buffered;
+        if (!b.length || b.end(b.length - 1) < tile.duration - 0.25) return;
+        tile.ready = true;
+        v.classList.add("is-ready");
+        wake();
+      }
+
+      v.addEventListener("progress", check);
+      v.addEventListener("canplaythrough", check);
+      // A clip that never reports itself fully buffered would otherwise stay
+      // on its poster for good.
+      window.setTimeout(function () {
+        if (!tile.ready && tile.duration) {
+          tile.ready = true;
+          v.classList.add("is-ready");
+          wake();
+        }
+      }, 9000);
+
+      // Nothing should ever play it.
+      v.addEventListener("play", function () { v.pause(); });
+
+      v.preload = "auto";
+      v.src = v.getAttribute("data-src");
+    }
+
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var tile = tiles.filter(function (t) { return t.el === entry.target; })[0];
+            if (tile) load(tile);
+            io.unobserve(entry.target);
+          });
+        },
+        { rootMargin: "300px 0px" }
+      );
+      tiles.forEach(function (t) { io.observe(t.el); });
+    } else {
+      tiles.forEach(load);
+    }
+  }
+
   function init() {
     initHeader();
     initNav();
@@ -699,6 +996,7 @@
     initCursor();
     initContactForm();
     initScrollHero();
+    initWork();
     initYear();
   }
 

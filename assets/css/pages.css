@@ -429,6 +429,110 @@
   .path { max-width: 17rem; width: 100%; }
 }
 
+/* ==========================================================================
+   WORK
+   A grid of photographs that come alive as the cursor approaches. main.js
+   toggles .is-near when the pointer is within 70px of a tile; every bit of
+   movement below is CSS, so retuning it needs no JavaScript.
+   ========================================================================== */
+
+/* Columns are capped rather than 1fr: with a single piece of work an
+   uncapped auto-fit stretches it to the full shell, which at 1280 is a tile
+   over 1100px wide and 770 tall. Capped and centred, one item reads as a
+   deliberate single piece and the grid still fills out to two or three
+   columns as more are added. */
+.work {
+  display: grid;
+  gap: var(--space-l);
+  /* Three across on a desktop, two on a tablet, one on a phone. The cap on
+     the container keeps a single tile from stretching the full shell if the
+     row is ever reduced to one. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  max-width: 78rem;
+  margin-inline: auto;
+}
+
+.work__item {
+  position: relative;
+  margin: 0;
+}
+
+/* The frame clips the push, so the photograph grows within its border rather
+   than pressing past it. */
+.work__frame {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border: 2px solid var(--frame);
+  background: var(--ink-900);
+  transition: box-shadow var(--dur) var(--ease);
+}
+
+.work__item.is-near .work__frame {
+  box-shadow: 0 0 40px -10px color-mix(in oklab, var(--frame) 75%, transparent);
+}
+
+/* The clip itself never plays. main.js sets currentTime from how close the
+   cursor is, so the drive runs forward as you approach and backwards as you
+   leave — a position rather than a playback, which is why it reverses
+   exactly and never needs restarting. */
+.work__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--ink-900);
+  /* The poster carries the tile until the clip is buffered enough to scrub. */
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.work__video.is-ready { opacity: 1; }
+
+/* The caption sits BELOW the photograph, in normal flow, rather than over it.
+   Overlaying looked right until the push finished: the camera moves toward
+   the subject, the subject therefore ends up where the caption is, and the
+   box covered the very thing it was describing. In flow it also reserves its
+   own height, so nothing on the page jumps when it appears. */
+.work__caption {
+  display: grid;
+  gap: var(--space-3xs);
+  margin-block-start: -2px; /* sit flush against the frame's border */
+  padding: var(--space-s) var(--space-m);
+  border: 2px solid var(--rule-edge);
+  border-left: 2px solid var(--accent);
+  background: var(--bg-raised);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.work__item.is-near .work__caption { opacity: 1; transform: translateY(0); }
+
+.work__caption-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-0);
+  letter-spacing: var(--track-snug);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.work__caption-body {
+  font-size: var(--step--1);
+  line-height: var(--leading-normal);
+  color: var(--text-soft);
+}
+
+/* No pointer to approach, or reduced motion asked for: the tiles sit still
+   and the captions are simply there. JS adds this class. */
+.work__item.is-static .work__caption {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
 /* ---- Inner page masthead ------------------------------------------------
    Shared by ace-advisor.html and cybertruck.html so both paths open on the
    same beat. */
@@ -1295,6 +1399,14 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
   color: var(--text-muted);
 }
 .handoff__addr a { color: var(--edge); border-bottom: 1px solid currentColor; }
+
+.handoff__tip {
+  margin-block-start: var(--space-s);
+  font-size: var(--step--1);
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+}
+.handoff__tip strong { color: var(--text-soft); }
 
 /* The where-we-work note under the form. Small, but framed and drifting so
    it does not read as fine print. */
