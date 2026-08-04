@@ -290,11 +290,98 @@
     var textEl = handoff && handoff.querySelector("[data-handoff-text]");
     var copyBtn = handoff && handoff.querySelector("[data-handoff-copy]");
     var mailLink = handoff && handoff.querySelector("[data-handoff-mail]");
+    var gmailLink = handoff && handoff.querySelector("[data-handoff-gmail]");
+    var outlookLink = handoff && handoff.querySelector("[data-handoff-outlook]");
     var truncNote = handoff && handoff.querySelector("[data-handoff-trunc]");
+
+    // Browsers and these two services both stop honouring very long URLs.
+    // Past this the compose window opens empty and the copy button is the
+    // route — which the panel says, rather than silently truncating.
+    var URL_LIMIT = 7000;
+
+    /* -- validation feedback ----------------------------------------------
+       The browser's own bubble is not enough on a form this long. It shows
+       one message at a time, vanishes after a few seconds, and the jump to a
+       field a thousand pixels up reads as "nothing happened" — which is
+       exactly how a submit gets abandoned. So: mark every missing field, and
+       say plainly which ones they are. */
+
+    var errorBox = form.querySelector("[data-form-errors]");
+
+    /* Take validation off the browser — but only now that JS is running.
+       This is the bug that made a blocked submit look like nothing happening:
+       with native validation on, clicking submit on an invalid form makes the
+       browser show its own bubble and NEVER fire the submit event, so none of
+       the code below ever ran. Setting novalidate here (rather than in the
+       markup) means a visitor without JavaScript still gets native validation,
+       since for them the browser is the only thing checking. */
+    form.setAttribute("novalidate", "novalidate");
+
+    function labelFor(el) {
+      var wrap = el.closest(".field, .fieldset");
+      if (!wrap) return el.name || "a field";
+      var label = wrap.querySelector(".field__label, .fieldset__legend");
+      // Strip the leading * the copy uses to mark required fields.
+      return label ? label.textContent.trim().replace(/^\*/, "") : el.name;
+    }
+
+    function clearErrors() {
+      Array.prototype.forEach.call(form.querySelectorAll(".is-invalid"), function (el) {
+        el.classList.remove("is-invalid");
+      });
+      if (errorBox) {
+        errorBox.hidden = true;
+        errorBox.textContent = "";
+      }
+    }
+
+    function showErrors() {
+      clearErrors();
+
+      var missing = [];
+      var first = null;
+      Array.prototype.forEach.call(form.elements, function (el) {
+        if (!el.willValidate || el.checkValidity()) return;
+        var wrap = el.closest(".field, .fieldset");
+        if (wrap) wrap.classList.add("is-invalid");
+        var name = labelFor(el);
+        if (missing.indexOf(name) === -1) missing.push(name);
+        if (!first) first = wrap || el;
+      });
+
+      if (errorBox && missing.length) {
+        errorBox.textContent =
+          (missing.length === 1 ? "One answer is missing: " : "Some answers are missing: ") +
+          missing.join(" • ");
+        errorBox.hidden = false;
+      }
+
+      if (first) first.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+
+    // Clear a field's mark as soon as it is filled in, so the page stops
+    // shouting the moment the visitor fixes it.
+    form.addEventListener("input", function (event) {
+      var wrap = event.target.closest && event.target.closest(".field, .fieldset");
+      if (wrap && wrap.classList.contains("is-invalid") && event.target.checkValidity()) {
+        wrap.classList.remove("is-invalid");
+      }
+    });
+    form.addEventListener("change", function (event) {
+      var wrap = event.target.closest && event.target.closest(".field, .fieldset");
+      if (wrap && wrap.classList.contains("is-invalid") && event.target.checkValidity()) {
+        wrap.classList.remove("is-invalid");
+      }
+    });
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      if (!form.reportValidity()) return;
+
+      if (!form.checkValidity()) {
+        showErrors();
+        return;
+      }
+      clearErrors();
 
       // Serialise every field generically, so adding or removing inputs in the
       // markup needs no change here. Checkbox groups share a name and are
@@ -324,29 +411,54 @@
       var name = (byName["First & Last Name"] || byName.name || [""])[0];
       var subject = "Enquiry — " + (name || "Ace Spaders");
 
-      // Long mailto: URLs get truncated by some mail clients, so past a safe
-      // length the mail we open carries the subject only and the full text
-      // stays on the page for the visitor to copy.
-      var full =
-        "mailto:" + mailto +
-        "?subject=" + encodeURIComponent(subject) +
-        "&body=" + encodeURIComponent(body);
-      var short = "mailto:" + mailto + "?subject=" + encodeURIComponent(subject);
-      var href = full.length > 1900 ? short : full;
+      var encSubject = encodeURIComponent(subject);
+      var encBody = encodeURIComponent(body);
 
-      // Show the panel BEFORE handing off to the mail client. A mailto: with
-      // no registered handler does nothing at all — no error, no navigation —
-      // which is how a submission silently disappears. With the panel already
-      // up, the visitor always has the text and the address in front of them.
+      // Three routes to the same message. Gmail and Outlook are ordinary web
+      // pages, so they work for people who have no mail application at all —
+      // which mailto: cannot serve, and which is most people reading mail in
+      // a browser tab.
+      var gmail =
+        "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(mailto) +
+        "&su=" + encSubject + "&body=" + encBody;
+      var outlook =
+        "https://outlook.live.com/mail/0/deeplink/compose?to=" + encodeURIComponent(mailto) +
+        "&subject=" + encSubject + "&body=" + encBody;
+      var mailFull = "mailto:" + mailto + "?subject=" + encSubject + "&body=" + encBody;
+
+      // The three have very different ceilings, so they are judged separately.
+      // mailto: is the tight one — desktop clients start truncating around a
+      // couple of thousand characters — while Gmail and Outlook are ordinary
+      // URLs and carry far more. Applying the mailto limit to all three (as
+      // this did at first) would strip the answers out of the Gmail link for
+      // no reason, which is the route most people here actually take.
+      var mailLong = mailFull.length > 1900;
+      var webLong = Math.max(gmail.length, outlook.length) > URL_LIMIT;
+
+      var mailHref = mailLong ? "mailto:" + mailto + "?subject=" + encSubject : mailFull;
+      var gmailHref = webLong
+        ? "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(mailto) + "&su=" + encSubject
+        : gmail;
+      var outlookHref = webLong
+        ? "https://outlook.live.com/mail/0/deeplink/compose?to=" + encodeURIComponent(mailto) + "&subject=" + encSubject
+        : outlook;
+
+      // Only warn when something really will arrive empty.
+      var tooLong = mailLong || webLong;
+
+      // The panel is shown and nothing is auto-opened. Firing a mailto: at a
+      // machine with no mail client does nothing visible, which is exactly
+      // what made a successful submit look like a failure; and opening a tab
+      // unasked would be worse. The visitor picks the route they actually use.
       if (handoff) {
         if (textEl) textEl.value = body;
-        if (mailLink) mailLink.href = href;
-        if (truncNote) truncNote.hidden = full.length <= 1900;
+        if (mailLink) mailLink.href = mailHref;
+        if (gmailLink) gmailLink.href = gmailHref;
+        if (outlookLink) outlookLink.href = outlookHref;
+        if (truncNote) truncNote.hidden = !tooLong;
         handoff.hidden = false;
         handoff.scrollIntoView({ block: "start", behavior: "smooth" });
       }
-
-      window.location.href = href;
     });
 
     /* -- copy button ------------------------------------------------------ */

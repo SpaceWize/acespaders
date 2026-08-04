@@ -1169,6 +1169,37 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
 .check { color: var(--text-soft); }
 .check:hover { color: var(--edge-bright); }
 
+/* ---- Missing answers ----------------------------------------------------
+   The browser's own validation bubble shows one message, briefly. On a form
+   with forty-odd inputs that is not enough to stop a submit being abandoned,
+   so every unanswered field is marked and named until it is filled in. */
+
+.field.is-invalid .field__control,
+.fieldset.is-invalid .field__control {
+  border-color: var(--frame);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--red-500) 25%, transparent);
+}
+
+.field.is-invalid .field__label,
+.fieldset.is-invalid .fieldset__legend { color: var(--frame); }
+
+.fieldset.is-invalid .checks {
+  padding-inline-start: var(--space-xs);
+  border-inline-start: 2px solid var(--frame);
+}
+
+.form-errors {
+  margin-block-start: var(--space-l);
+  padding: var(--space-s) var(--space-m);
+  border: 1px solid var(--frame);
+  background: color-mix(in oklab, var(--red-700) 22%, transparent);
+  color: var(--text);
+  font-size: var(--step--1);
+  line-height: var(--leading-normal);
+}
+
+.form-errors[hidden] { display: none; }
+
 /* Submit sits full width at the foot of the panel, in the brand gold — the
    same weight as the primary button everywhere else on the site. */
 .form-panel__submit {
@@ -1240,7 +1271,30 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
   resize: vertical;
 }
 
-.handoff .btn-row { margin-block-start: var(--space-m); }
+/* The three send routes, given the most weight in the panel — this is the
+   step that actually gets the enquiry to Ace. */
+.handoff__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-block-start: var(--space-m);
+}
+
+.handoff__choices .btn { flex: 1 1 12rem; justify-content: center; text-align: center; }
+
+.handoff .btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-s);
+  margin-block-start: var(--space-m);
+}
+
+.handoff__addr {
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+.handoff__addr a { color: var(--edge); border-bottom: 1px solid currentColor; }
 
 /* The where-we-work note under the form. Small, but framed and drifting so
    it does not read as fine print. */

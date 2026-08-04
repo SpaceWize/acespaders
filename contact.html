@@ -29,16 +29,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Inter:wght@400;500;600&display=swap">
 
 <!-- Load order matters: tokens defines the variables everything else reads. -->
-<link rel="stylesheet" href="assets/css/tokens.css?v=9">
-<link rel="stylesheet" href="assets/css/base.css?v=9">
-<link rel="stylesheet" href="assets/css/layout.css?v=9">
-<link rel="stylesheet" href="assets/css/components.css?v=9">
-<link rel="stylesheet" href="assets/css/pages.css?v=9">
+<link rel="stylesheet" href="assets/css/tokens.css?v=11">
+<link rel="stylesheet" href="assets/css/base.css?v=11">
+<link rel="stylesheet" href="assets/css/layout.css?v=11">
+<link rel="stylesheet" href="assets/css/components.css?v=11">
+<link rel="stylesheet" href="assets/css/pages.css?v=11">
 
 <!-- Set before first paint so reveal elements start hidden without a flash.
      With JS off the class is never added and everything renders visible. -->
 <script>document.documentElement.classList.add("js");</script>
-<script src="assets/js/main.js?v=9" defer></script>
+<script src="assets/js/main.js?v=11" defer></script>
 <!--/#HEAD-->
 </head>
 
@@ -223,6 +223,10 @@
                       placeholder="e.g. Time-zone: PST / Give an outline of your needs"></textarea>
           </div>
 
+          <!-- Filled by main.js when a submit is blocked, naming every field
+               that still needs an answer. -->
+          <p class="form-errors" data-form-errors role="alert" hidden></p>
+
           <button class="form-panel__submit" type="submit">Submit</button>
 
           <p class="form-panel__thanks">
@@ -233,31 +237,41 @@
       </form>
 
       <!-- ==================== AFTER SUBMIT ====================
-           Hidden until the form is submitted. A static site cannot send mail
-           itself, so submitting hands off to the visitor's mail app — and a
-           mailto: with no registered handler does nothing at all, silently.
-           This panel is shown first, so the enquiry is always recoverable:
-           the full text is here to copy, with the address next to it. -->
+           Hidden until the form is submitted. A static site cannot send the
+           mail itself, so the visitor sends it — and the only universal
+           mechanism, mailto:, does nothing at all for the many people who
+           read mail in a browser tab rather than an app.
+
+           So instead of assuming, offer the choice: Gmail and Outlook get
+           real compose URLs with the message already in them, mailto covers
+           anyone with a desktop client, and the text is on the page to copy
+           regardless. Whichever route they take, the answers are carried
+           over and they only have to press send. -->
       <div class="handoff" data-form-handoff hidden>
-        <h2 class="handoff__title">One more step</h2>
+        <h2 class="handoff__title">Almost there &mdash; send it</h2>
         <p class="handoff__body">
-          Your email app should have opened with this message ready to send.
-          <strong>If nothing opened</strong>, copy the text below and send it to
-          <a href="mailto:info@acespaders.com">info@acespaders.com</a> from
-          whichever email you use.
+          Everything you filled in is already written into the message below.
+          <strong>Choose where you send from</strong> and it opens ready to go
+          &mdash; you only need to press send.
         </p>
         <p class="handoff__body" data-handoff-trunc hidden>
-          Your answers were too long to carry into the email automatically, so
-          the message that opened is blank &mdash; please paste the text below
-          into it.
+          You picked a lot of options, and some mail apps cannot carry that
+          much text through a link. <strong>If the message opens blank</strong>,
+          copy it from below and paste it in.
         </p>
+
+        <div class="handoff__choices">
+          <a class="btn btn--primary" data-handoff-gmail href="#" target="_blank" rel="noopener"><span>Open in Gmail</span></a>
+          <a class="btn btn--ghost" data-handoff-outlook href="#" target="_blank" rel="noopener"><span>Open in Outlook</span></a>
+          <a class="btn btn--ghost" data-handoff-mail href="mailto:info@acespaders.com"><span>Use my mail app</span></a>
+        </div>
 
         <label class="sr-only" for="handoff-text">Your enquiry, ready to copy</label>
         <textarea class="handoff__text" id="handoff-text" data-handoff-text readonly rows="12"></textarea>
 
         <div class="btn-row">
           <button class="btn btn--primary" type="button" data-handoff-copy><span>Copy the message</span></button>
-          <a class="btn btn--ghost" data-handoff-mail href="mailto:info@acespaders.com"><span>Open email app again</span></a>
+          <span class="handoff__addr">or send it yourself to <a href="mailto:info@acespaders.com">info@acespaders.com</a></span>
         </div>
       </div>
 
