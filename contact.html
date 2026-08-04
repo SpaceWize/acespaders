@@ -177,18 +177,27 @@
 
           <!-- Free text, as on the original form: these two questions have no
                preset answers there. They were dropdowns here for a while with
-               invented price bands, which put numbers in front of prospects
-               that Ace had never quoted. -->
+               invented price bands. These are the real ones, from Ace. -->
           <div class="field">
             <label class="field__label" for="budget">*What is your Budget</label>
-            <input class="field__control" type="text" id="budget" name="What is your Budget" required
-                   placeholder="e.g. Around $5,000 / open to discussion">
+            <select class="field__control" id="budget" name="What is your Budget" required>
+              <option value="">Select&hellip;</option>
+              <option>1k - 5k</option>
+              <option>6k - 10k</option>
+              <option>11k - 20k</option>
+              <option>21k +</option>
+            </select>
           </div>
 
           <div class="field">
             <label class="field__label" for="duration">*How long do you want to work with Ace</label>
-            <input class="field__control" type="text" id="duration" name="How long do you want to work with Ace" required
-                   placeholder="e.g. One session / three months / ongoing">
+           <select class="field__control" id="duration" name="How long do you want to work with Ace" required>
+              <option value="">Select&hellip;</option>
+              <option>1 - 5 sessions in 1 month</option>
+              <option>5 - 10 sessions in 3 months</option>
+              <option>10 - 20 sessions over 6 months</option>
+              <option>Prolonged &amp; Constant Proximity</option>
+            </select>
           </div>
 
           <!-- Radio rather than checkbox: only one of these can be true. -->
