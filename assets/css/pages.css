@@ -1066,15 +1066,19 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
   color: var(--accent);
 }
 
+/* The panel used to be dark-on-cream with fully rounded inputs — a paper-form
+   motif that read as a different website against the rest of the site, and
+   fought the near-square corners used everywhere else. It now sits on the
+   dark system: raised surface, red frame, 2px corners, teal edges that go
+   gold on focus. */
 .form-panel {
-  --panel-ink: #16181b;
-  --panel-muted: #6f6a5c;
   width: min(38rem, 100%);
   margin: var(--space-xl) auto 0;
   padding: clamp(var(--space-m), 0.75rem + 2vw, var(--space-xl));
-  background: #fdf3d8;
-  color: var(--panel-ink);
+  background: var(--bg-raised);
+  color: var(--text);
   border: 2px solid var(--frame);
+  box-shadow: 0 0 46px -18px color-mix(in oklab, var(--frame) 70%, transparent);
 }
 
 .form-panel__title {
@@ -1083,41 +1087,46 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
   font-size: clamp(1.3rem, 0.9rem + 1.6vw, 1.9rem);
   font-style: italic;
   line-height: 1.15;
-  color: var(--panel-ink);
+  color: var(--text);
 }
 
-.form-panel__title u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.form-panel__title u {
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
 
-/* Every field inside the panel is dark-on-cream. */
 .form-panel .field__label,
 .form-panel .fieldset__legend {
   font-size: var(--step--1);
   font-weight: var(--weight-medium);
   letter-spacing: 0;
   text-transform: none;
-  color: var(--panel-ink);
+  color: var(--text);
 }
 
 .form-panel .field__control {
-  background: #fffdf6;
-  border: 1px solid var(--panel-ink);
-  border-radius: 999px;
-  color: var(--panel-ink);
+  background: var(--ink-900);
+  border: 1px solid var(--rule-edge);
+  border-radius: var(--radius-sm);
+  color: var(--text);
 }
 
-.form-panel textarea.field__control { border-radius: 12px; }
+.form-panel .field__control::placeholder { color: var(--text-muted); }
 
-.form-panel .field__control::placeholder { color: #8d8778; }
-
-.form-panel .field__control:hover { border-color: var(--frame); }
+.form-panel .field__control:hover { border-color: var(--edge); }
 
 .form-panel .field__control:focus {
-  border-color: var(--frame);
-  background: #fff;
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--frame) 25%, transparent);
+  border-color: var(--accent);
+  background: var(--ink-900);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--gold-500) 28%, transparent);
 }
 
-.form-panel .field__hint { color: var(--panel-muted); }
+/* The arrow the browser draws on a select is a dark glyph by default, which
+   disappears on a dark control. */
+.form-panel select.field__control { color-scheme: dark; }
+
+.form-panel .field__hint { color: var(--text-muted); }
 
 /* Checkbox groups. Kept as a plain stack — these lists run long (the add-ons
    alone are 22 items) and columns would make them harder to scan, not
@@ -1152,36 +1161,42 @@ a.hero-talk:hover .hero-talk__truck { animation-duration: 1.6s; }
   width: 0.95rem;
   height: 0.95rem;
   margin-block-start: 0.2rem;
-  accent-color: var(--frame);
+  accent-color: var(--accent);
+  color-scheme: dark;
   cursor: pointer;
 }
 
-.check:hover { color: var(--frame); }
+.check { color: var(--text-soft); }
+.check:hover { color: var(--edge-bright); }
 
-/* Submit sits full width at the foot of the panel. */
+/* Submit sits full width at the foot of the panel, in the brand gold — the
+   same weight as the primary button everywhere else on the site. */
 .form-panel__submit {
   width: 100%;
   margin-block-start: var(--space-l);
   padding: 0.9em 2em;
-  border: 2px solid var(--panel-ink);
-  border-radius: 999px;
-  background: var(--panel-ink);
-  color: #fdf3d8;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--ink-900);
   font-size: var(--step-0);
   font-weight: var(--weight-semi);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
-.form-panel__submit:hover { background: var(--frame); border-color: var(--frame); color: #fff; }
+.form-panel__submit:hover {
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
 
 .form-panel__thanks {
   margin-block-start: var(--space-l);
   text-align: center;
   font-size: var(--step--1);
-  color: #4f4a3f;
+  color: var(--text-muted);
 }
 
 /* Closing notes under the panel, back on the dark page. */
