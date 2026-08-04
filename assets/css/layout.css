@@ -35,6 +35,10 @@
    drawn line rather than a border. */
 .section--ruled { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--rule-edge) 22%, var(--rule-edge) 78%, transparent) 1; }
 
+/* The full-width teal edge the about section carries, as a divider a section
+   can wear on its own top border. Matches .about-feature's border-block. */
+.section--edged { border-top: 2px solid var(--edge); }
+
 /* ---- Header -------------------------------------------------------------
    Fixed, transparent over the hero, then fades to a solid blurred bar once
    the page scrolls. JS toggles .is-stuck. */
