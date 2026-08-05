@@ -826,7 +826,7 @@
       return;
     }
 
-    var MARGIN = 120;      // how far outside the border the clip starts
+    var MARGIN = 150;      // how far outside the border the clip starts
     var EASE = 0.18;      // how hard the clip chases the cursor
     var SETTLED = 0.001;  // close enough to stop the loop
     var MIN_SEEK = 1 / 48;
