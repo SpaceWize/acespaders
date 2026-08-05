@@ -309,3 +309,58 @@ textarea.field__control { min-height: 9rem; resize: vertical; }
   font-size: var(--step--1);
   color: var(--text-muted);
 }
+
+/* ---- Magnetic --------------------------------------------------------------
+   JS adds .is-magnetic and writes --mx/--my as the element is approached, so
+   it leans toward the cursor and springs back when the cursor leaves.
+
+   The offset uses the standalone `translate` property rather than a transform.
+   Several magnetic elements already have a transform of their own — the work
+   arrows scale on hover, the Start Here button is mid-scale in a keyframe
+   animation — and a transform written from JS would replace theirs. As its
+   own property it simply composes with whatever they do. */
+
+.is-magnetic { translate: var(--mx, 0px) var(--my, 0px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .is-magnetic { translate: none; }
+}
+
+/* ---- Spotlight -------------------------------------------------------------
+   A bright duplicate of the text laid exactly over the original and masked to
+   a disc that follows the cursor. Nothing is dimmed to make room for it: the
+   text underneath keeps its own colour, so the copy is exactly as readable
+   with the cursor away as it was before, and the effect only adds light.
+
+   JS builds the duplicate and writes --spot-x/--spot-y. It is aria-hidden and
+   inert to pointing, so it is one element to the eye and none to anything
+   else. */
+
+[data-spotlight] { position: relative; }
+
+.spotlight__lit {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--accent-bright);
+  /* Parked off-screen until the cursor is over the text, so the lit copy is
+     invisible rather than centred on 0,0. */
+  --spot-x: -9999px;
+  --spot-y: -9999px;
+  -webkit-mask-image: radial-gradient(circle var(--spot-r, 130px) at var(--spot-x) var(--spot-y),
+                                      #000 0%, #000 30%, transparent 70%);
+          mask-image: radial-gradient(circle var(--spot-r, 130px) at var(--spot-x) var(--spot-y),
+                                      #000 0%, #000 30%, transparent 70%);
+}
+
+/* The duplicate inherits the original's markup, so anything already coloured
+   inside it has to be overridden or the disc would light it in its own colour
+   instead of the spotlight's. */
+.spotlight__lit strong,
+.spotlight__lit em,
+.spotlight__lit b,
+.spotlight__lit a { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight__lit { display: none; }
+}

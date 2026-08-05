@@ -552,6 +552,28 @@
   transition-delay: 380ms;
 }
 
+/* The centred tile's frame tips toward the cursor. It sits on the frame
+   rather than the tile so it keeps its own short transition — sharing the
+   carousel's 650ms would make the tilt lag half a second behind the pointer.
+   The caption stays flat and square, which keeps the text readable. */
+.work--carousel .work__frame {
+  transform: perspective(900px)
+             rotateX(var(--tilt-x, 0deg))
+             rotateY(var(--tilt-y, 0deg));
+  /* Pivot on the bottom edge, which is also where the perspective origin
+     lands. The caption is flat and butts against that edge, so tilting about
+     the centre lifted the frame off it by a good ten pixels at the corners;
+     about the bottom edge the joint holds and only the top leans. */
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
+  transition: transform 220ms var(--ease-out-soft), border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work--carousel .work__frame { transform: none; transition: none; }
+}
+
 /* ---- Carousel controls -------------------------------------------------- */
 
 .work__nav {
@@ -672,12 +694,26 @@
   border: 2px solid var(--rule-edge);
   border-left: 2px solid var(--accent);
   background: var(--bg-raised);
-  opacity: 0;
-  transform: translateY(14px);
   transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
+/* Hidden only where there is JavaScript to bring it back — same bargain as
+   [data-reveal]. Ungated, a visitor without JS got three frames and no text
+   at all, since nothing was ever going to add .is-near or .is-center. */
+.js .work__caption {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
 .work__item.is-near .work__caption { opacity: 1; transform: translateY(0); }
+
+.work__caption-year {
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: var(--track-widest);
+  color: var(--edge);
+  font-variant-numeric: tabular-nums;
+}
 
 .work__caption-title {
   font-family: var(--font-display);
@@ -1126,6 +1162,96 @@
    with cyan rules top and bottom so it reads as a distinct chapter rather
    than another section of body copy.
    ========================================================================== */
+
+/* ==========================================================================
+   TICKER
+   A strip that drifts on its own and is pushed by the scroll. JS writes the
+   offset and the blur; everything here is the look.
+   ========================================================================== */
+
+.ticker {
+  overflow: hidden;
+  padding-block: var(--space-m);
+  border-block: 2px solid var(--edge);
+  background: var(--ink-800);
+}
+
+/* max-content so the track is as wide as its copies rather than the section,
+   which is what lets it be translated past the left edge. */
+.ticker__track {
+  display: flex;
+  width: max-content;
+  will-change: transform, filter;
+}
+
+.ticker__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  margin: 0;
+  padding-inline-end: var(--space-xl);
+  list-style: none;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-3);
+  letter-spacing: var(--track-snug);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-soft);
+}
+
+.ticker__list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.ticker__list li::after {
+  content: "\2660";
+  font-size: 0.5em;
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track { filter: none !important; }
+}
+
+/* ==========================================================================
+   FIGURES
+   Three numbers that scramble into place once as they scroll in.
+   ========================================================================== */
+
+.figures__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-l);
+  text-align: center;
+}
+
+.figure {
+  display: grid;
+  gap: var(--space-2xs);
+  margin: 0;
+}
+
+.figure__num {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-6);
+  line-height: 1;
+  letter-spacing: var(--track-snug);
+  color: var(--accent);
+  /* Every digit the same width, or the scramble jitters the layout as it
+     cycles through 1s and 8s. */
+  font-variant-numeric: tabular-nums;
+}
+
+.figure__label {
+  font-size: var(--step--1);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
 
 .about-feature {
   position: relative;

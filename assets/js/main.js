@@ -12,6 +12,13 @@
   "use strict";
 
   var REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var FINE_POINTER = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+  // Cursor-driven effects need a cursor to be driven by, and none of them
+  // should run against an explicit request for less motion.
+  function pointerEffectsWanted() {
+    return !REDUCED_MOTION.matches && FINE_POINTER.matches;
+  }
 
   /* ------------------------------------------------------------------------
      Header
@@ -1135,6 +1142,452 @@
     }
   }
 
+  /* ------------------------------------------------------------------------
+     Magnetic elements
+     Buttons and marks lean toward the cursor once it is within reach, then
+     spring back when it leaves.
+
+     The spring is a velocity integration rather than a lerp: a lerp only ever
+     approaches its target, so the element would glide back and stop dead. A
+     little stored velocity carries it just past centre and settles, which is
+     the part that reads as physical.
+     ---------------------------------------------------------------------- */
+
+  function initMagnetic() {
+    if (!pointerEffectsWanted()) return;
+
+    var SELECTOR = ".btn, .pulse-btn, .work__arrow, .wordmark";
+    var els = document.querySelectorAll(SELECTOR);
+    if (!els.length) return;
+
+    var REACH = 90;        // how far outside the element it starts pulling
+    var PULL = 0.32;       // fraction of the gap the element closes
+    var STIFFNESS = 0.14;
+    var DAMPING = 0.74;    // under 1, so it overshoots slightly and settles
+    var SETTLED = 0.01;
+
+    var nodes = Array.prototype.map.call(els, function (el) {
+      el.classList.add("is-magnetic");
+      return { el: el, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0 };
+    });
+
+    var px = -99999;
+    var py = -99999;
+    var running = false;
+
+    function retarget(n) {
+      var r = n.el.getBoundingClientRect();
+      if (!r.width) { n.tx = 0; n.ty = 0; return; }
+
+      var cx = r.left + r.width / 2;
+      var cy = r.top + r.height / 2;
+
+      // Reach is measured from the element's edge, not its centre, so a wide
+      // button does not start pulling from further away than a small one.
+      var gapX = Math.max(Math.abs(px - cx) - r.width / 2, 0);
+      var gapY = Math.max(Math.abs(py - cy) - r.height / 2, 0);
+
+      if (Math.sqrt(gapX * gapX + gapY * gapY) > REACH) {
+        n.tx = 0;
+        n.ty = 0;
+        return;
+      }
+
+      n.tx = (px - cx) * PULL;
+      n.ty = (py - cy) * PULL;
+    }
+
+    function tick() {
+      var busy = false;
+
+      for (var i = 0; i < nodes.length; i++) {
+        var n = nodes[i];
+        retarget(n);
+
+        n.vx = (n.vx + (n.tx - n.x) * STIFFNESS) * DAMPING;
+        n.vy = (n.vy + (n.ty - n.y) * STIFFNESS) * DAMPING;
+        n.x += n.vx;
+        n.y += n.vy;
+
+        var still =
+          Math.abs(n.vx) < SETTLED && Math.abs(n.vy) < SETTLED &&
+          Math.abs(n.tx - n.x) < SETTLED && Math.abs(n.ty - n.y) < SETTLED;
+
+        if (still) {
+          n.x = n.tx;
+          n.y = n.ty;
+          n.vx = 0;
+          n.vy = 0;
+        } else {
+          busy = true;
+        }
+
+        n.el.style.setProperty("--mx", n.x.toFixed(2) + "px");
+        n.el.style.setProperty("--my", n.y.toFixed(2) + "px");
+      }
+
+      if (!busy) {
+        running = false;
+        return;
+      }
+      window.requestAnimationFrame(tick);
+    }
+
+    function wake() {
+      if (running) return;
+      running = true;
+      window.requestAnimationFrame(tick);
+    }
+
+    window.addEventListener("pointermove", function (event) {
+      px = event.clientX;
+      py = event.clientY;
+      wake();
+    }, { passive: true });
+
+    // Scrolling moves elements under a stationary cursor, so the pull has to
+    // be recomputed even though the pointer has not moved.
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", wake, { passive: true });
+
+    document.addEventListener("pointerleave", function () {
+      px = -99999;
+      py = -99999;
+      wake();
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     Spotlight text
+     Lays a bright duplicate of the text over the original and masks it to a
+     disc under the cursor.
+
+     The duplicate is a clone rather than attr(content) because the text has
+     markup inside it — the tagline's <strong> and <em> would be lost by an
+     attribute round-trip. Cloning keeps the line breaking identical too,
+     which is what makes the two copies sit exactly on top of each other.
+     ---------------------------------------------------------------------- */
+
+  function initSpotlight() {
+    if (!pointerEffectsWanted()) return;
+
+    var targets = document.querySelectorAll("[data-spotlight]");
+    if (!targets.length) return;
+
+    var PAD = 60;   // how far outside the text the disc still reaches
+    var items = [];
+
+    Array.prototype.forEach.call(targets, function (el) {
+      var lit = document.createElement("span");
+      lit.className = "spotlight__lit";
+      lit.setAttribute("aria-hidden", "true");
+      lit.innerHTML = el.innerHTML;
+      el.appendChild(lit);
+      items.push({ el: el, lit: lit });
+    });
+
+    var ticking = false;
+    var px = 0;
+    var py = 0;
+
+    function update() {
+      ticking = false;
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var r = it.el.getBoundingClientRect();
+
+        if (
+          px < r.left - PAD || px > r.right + PAD ||
+          py < r.top - PAD || py > r.bottom + PAD
+        ) {
+          it.lit.style.setProperty("--spot-x", "-9999px");
+          it.lit.style.setProperty("--spot-y", "-9999px");
+          continue;
+        }
+
+        it.lit.style.setProperty("--spot-x", (px - r.left).toFixed(1) + "px");
+        it.lit.style.setProperty("--spot-y", (py - r.top).toFixed(1) + "px");
+      }
+    }
+
+    function wake() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }
+
+    window.addEventListener("pointermove", function (event) {
+      px = event.clientX;
+      py = event.clientY;
+      wake();
+    }, { passive: true });
+
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", wake, { passive: true });
+  }
+
+  /* ------------------------------------------------------------------------
+     Tilt
+     The centred work tile's frame tips toward the cursor.
+
+     Only the frame is tilted, not the whole tile: the tile is already
+     carrying the carousel's 650ms transition, and a tilt sharing it would
+     trail half a second behind the pointer.
+     ---------------------------------------------------------------------- */
+
+  function initTilt() {
+    if (!pointerEffectsWanted()) return;
+    if (!document.querySelector("[data-work]")) return;
+
+    var MAX = 7;      // degrees at the very corner
+    var REACH = 40;   // keeps the tilt alive just outside the frame
+    var current = null;
+    var ticking = false;
+    var px = 0;
+    var py = 0;
+
+    function clear(frame) {
+      if (!frame) return;
+      frame.style.setProperty("--tilt-x", "0deg");
+      frame.style.setProperty("--tilt-y", "0deg");
+    }
+
+    function update() {
+      ticking = false;
+
+      var item = document.querySelector("[data-work].is-center");
+      var frame = item && item.querySelector(".work__frame");
+
+      // The centred tile changes as the carousel rotates; the one being left
+      // behind has to be levelled or it keeps the last angle it was given.
+      if (frame !== current) {
+        clear(current);
+        current = frame;
+      }
+      if (!frame) return;
+
+      var r = frame.getBoundingClientRect();
+      if (!r.width) return;
+
+      if (
+        px < r.left - REACH || px > r.right + REACH ||
+        py < r.top - REACH || py > r.bottom + REACH
+      ) {
+        clear(frame);
+        return;
+      }
+
+      // -1..1 from the frame's centre, clamped so the corners are the limit.
+      var nx = (px - (r.left + r.width / 2)) / (r.width / 2);
+      var ny = (py - (r.top + r.height / 2)) / (r.height / 2);
+      nx = nx < -1 ? -1 : nx > 1 ? 1 : nx;
+      ny = ny < -1 ? -1 : ny > 1 ? 1 : ny;
+
+      // Y drives rotateX inverted: cursor above the middle should tip the top
+      // of the frame away, not toward.
+      frame.style.setProperty("--tilt-x", (-ny * MAX).toFixed(2) + "deg");
+      frame.style.setProperty("--tilt-y", (nx * MAX).toFixed(2) + "deg");
+    }
+
+    function wake() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }
+
+    window.addEventListener("pointermove", function (event) {
+      px = event.clientX;
+      py = event.clientY;
+      wake();
+    }, { passive: true });
+
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", wake, { passive: true });
+  }
+
+  /* ------------------------------------------------------------------------
+     Figures
+     Each number scrambles through digits before settling on its value, once,
+     as it scrolls into view.
+
+     The scramble is drawn at the target's digit count from the first frame,
+     so the line never changes width as it runs; the CSS asks for tabular
+     figures so it does not change width between digits either.
+     ---------------------------------------------------------------------- */
+
+  function initFigures() {
+    var nums = document.querySelectorAll("[data-count-to]");
+    if (!nums.length) return;
+
+    // The final value is already in the markup, so with no IntersectionObserver
+    // and under reduced motion the right number is simply there.
+    if (REDUCED_MOTION.matches || !("IntersectionObserver" in window)) return;
+
+    var DURATION = 1100;
+    var SETTLE = 0.55;   // fraction of the run spent scrambling
+
+    function run(el) {
+      var target = parseInt(el.getAttribute("data-count-to"), 10) || 0;
+      var digits = String(target).length;
+      var start = 0;
+
+      // Every frame is drawn at the target's digit count, so counting up to 20
+      // reads 07, 15, 20 rather than 7, 15, 20 — which would step the number's
+      // width mid-run and shove a centred figure sideways.
+      function pad(value) {
+        var out = String(value);
+        while (out.length < digits) out = "0" + out;
+        return out;
+      }
+
+      function frame(now) {
+        if (!start) start = now;
+        var p = (now - start) / DURATION;
+        if (p >= 1) {
+          el.textContent = String(target);
+          return;
+        }
+
+        if (p < SETTLE) {
+          var out = "";
+          for (var i = 0; i < digits; i++) {
+            out += Math.floor(Math.random() * 10);
+          }
+          el.textContent = out;
+        } else {
+          // Past the scramble, count the rest of the way up so it lands on
+          // the number rather than snapping to it.
+          var k = (p - SETTLE) / (1 - SETTLE);
+          var eased = 1 - Math.pow(1 - k, 3);
+          el.textContent = pad(Math.round(target * eased));
+        }
+        window.requestAnimationFrame(frame);
+      }
+
+      window.requestAnimationFrame(frame);
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        io.unobserve(entry.target);
+        run(entry.target);
+      });
+    }, { threshold: 0.6 });
+
+    Array.prototype.forEach.call(nums, function (el) { io.observe(el); });
+  }
+
+  /* ------------------------------------------------------------------------
+     Ticker
+     A strip that drifts on its own and is pushed along by the scroll, blurring
+     in proportion to how fast it is moving.
+
+     The list is duplicated until the track is comfortably wider than the
+     viewport, then the offset wraps at one list's width. Because every copy is
+     identical, wrapping lands on a pixel that looks the same as the one it
+     left, so the loop has no seam.
+     ---------------------------------------------------------------------- */
+
+  function initTicker() {
+    var ticker = document.querySelector("[data-ticker]");
+    if (!ticker) return;
+
+    var track = ticker.querySelector("[data-ticker-track]");
+    var list = ticker.querySelector("[data-ticker-list]");
+    if (!track || !list) return;
+
+    var DRIFT = 0.35;        // px per frame with the page still
+    var SCROLL_PUSH = 0.55;  // px of travel per px of scroll
+    var BLUR_PER_PX = 0.42;
+    var MAX_BLUR = 7;
+    var FRICTION = 0.86;     // how fast the scroll's push bleeds away
+
+    var span = 0;
+    var offset = 0;
+    var push = 0;
+    var lastScroll = window.scrollY;
+    var visible = false;
+    var running = false;
+
+    function fill() {
+      // Reset to one list before measuring, so a resize does not keep adding
+      // copies on top of the copies made last time.
+      while (list.nextSibling) track.removeChild(list.nextSibling);
+      span = list.getBoundingClientRect().width;
+      if (!span) return;
+
+      var needed = Math.ceil(window.innerWidth / span) + 1;
+      for (var i = 0; i < needed; i++) {
+        var copy = list.cloneNode(true);
+        copy.removeAttribute("data-ticker-list");
+        track.appendChild(copy);
+      }
+    }
+
+    function tick() {
+      if (!visible || !span) {
+        running = false;
+        return;
+      }
+
+      offset += DRIFT + push;
+      push *= FRICTION;
+      if (Math.abs(push) < 0.01) push = 0;
+
+      // Wrap in both directions: a fast scroll up can drive the offset
+      // negative before the drift has caught up.
+      offset %= span;
+      if (offset < 0) offset += span;
+
+      var blur = Math.min(Math.abs(DRIFT + push) * BLUR_PER_PX, MAX_BLUR);
+
+      track.style.transform = "translate3d(" + (-offset).toFixed(2) + "px, 0, 0)";
+      track.style.filter = blur > 0.15 ? "blur(" + blur.toFixed(2) + "px)" : "";
+
+      window.requestAnimationFrame(tick);
+    }
+
+    function wake() {
+      if (running || !visible) return;
+      running = true;
+      window.requestAnimationFrame(tick);
+    }
+
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY;
+      push += (y - lastScroll) * SCROLL_PUSH;
+      lastScroll = y;
+      wake();
+    }, { passive: true });
+
+    window.addEventListener("resize", function () {
+      fill();
+      wake();
+    }, { passive: true });
+
+    fill();
+
+    // Off-screen the loop is pure waste — it is a fixed-cost repaint of a
+    // blurred, full-width strip nobody can see.
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        visible = entries[0].isIntersecting;
+        wake();
+      }, { rootMargin: "100px 0px" }).observe(ticker);
+    } else {
+      visible = true;
+      wake();
+    }
+
+    if (REDUCED_MOTION.matches) {
+      visible = false;
+      track.style.transform = "";
+      track.style.filter = "";
+    }
+  }
+
   function init() {
     initHeader();
     initNav();
@@ -1144,6 +1597,11 @@
     initContactForm();
     initScrollHero();
     initWork();
+    initMagnetic();
+    initSpotlight();
+    initTilt();
+    initFigures();
+    initTicker();
     initYear();
   }
 

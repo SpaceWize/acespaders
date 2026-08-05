@@ -29,16 +29,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Inter:wght@400;500;600&display=swap">
 
 <!-- Load order matters: tokens defines the variables everything else reads. -->
-<link rel="stylesheet" href="assets/css/tokens.css?v=16">
-<link rel="stylesheet" href="assets/css/base.css?v=16">
-<link rel="stylesheet" href="assets/css/layout.css?v=16">
-<link rel="stylesheet" href="assets/css/components.css?v=16">
-<link rel="stylesheet" href="assets/css/pages.css?v=16">
+<link rel="stylesheet" href="assets/css/tokens.css?v=17">
+<link rel="stylesheet" href="assets/css/base.css?v=17">
+<link rel="stylesheet" href="assets/css/layout.css?v=17">
+<link rel="stylesheet" href="assets/css/components.css?v=17">
+<link rel="stylesheet" href="assets/css/pages.css?v=17">
 
 <!-- Set before first paint so reveal elements start hidden without a flash.
      With JS off the class is never added and everything renders visible. -->
 <script>document.documentElement.classList.add("js");</script>
-<script src="assets/js/main.js?v=16" defer></script>
+<script src="assets/js/main.js?v=17" defer></script>
 <!--/#HEAD-->
 </head>
 
@@ -125,7 +125,11 @@
 
         <a class="pulse-btn start-here" href="#paths">Start Here</a>
 
-        <p class="hero-tagline">
+        <!-- data-spotlight lays a bright copy of this text over itself and
+             masks it to a disc under the cursor. It only ever adds light —
+             the text underneath keeps its normal colour, so nothing here gets
+             harder to read when the cursor is elsewhere. -->
+        <p class="hero-tagline" data-spotlight>
           <strong>Ace Spaders</strong> offers discreet high-ticket advisory for
           business scaling, crisis navigation, on-location scouting and
           representation. Immersive sessions and boots-on-the-ground work
@@ -175,7 +179,7 @@
         </a>
       </div>
 
-      <p class="paths__note" data-reveal>Paths May Intersect</p>
+      <p class="paths__note" data-reveal data-spotlight>Paths May Intersect</p>
     </div>
   </section>
 
@@ -198,8 +202,12 @@
        until then, and for anyone on a touch screen or asking for reduced
        motion it is the whole tile.
 
-       ADDING WORK — copy a <figure>. Captions describe what is actually on
-       offer; do not write up a job that did not happen. -->
+       ADDING WORK — copy a <figure>.
+
+       PLACEHOLDER COPY — the year, title and description in every caption
+       below are stand-ins to be replaced, and the descriptions are lorem
+       ipsum so nobody mistakes them for finished text. When the real ones go
+       in, write up work that actually happened; do not invent a job. -->
   <section class="section section--raised section--edged" id="work">
     <div class="shell">
       <header class="section-head section-head--center" data-reveal>
@@ -216,45 +224,48 @@
         <figure class="work__item" data-work>
           <span class="work__frame">
             <video class="work__video" data-work-video
-                   data-src="assets/video/work-wide-1.mp4?v=16"
-                   poster="assets/img/work-wide-1.jpg?v=16"
+                   data-src="assets/video/work-wide-1.mp4?v=17"
+                   poster="assets/img/work-wide-1.jpg?v=17"
                    muted playsinline preload="none"
                    disablepictureinpicture disableremoteplayback
                    aria-hidden="true" tabindex="-1"></video>
           </span>
           <figcaption class="work__caption">
-            <span class="work__caption-title">Premium Pickup &amp; Transport</span>
-            <span class="work__caption-body">Chauffeured for the day or the week. Airport runs, spontaneous date nights, en-route strategy talks.</span>
+            <span class="work__caption-year">2024</span>
+            <span class="work__caption-title">Open Road</span>
+            <span class="work__caption-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span>
           </figcaption>
         </figure>
 
         <figure class="work__item" data-work>
           <span class="work__frame">
             <video class="work__video" data-work-video
-                   data-src="assets/video/work-bend-1.mp4?v=16"
-                   poster="assets/img/work-bend-1.jpg?v=16"
+                   data-src="assets/video/work-bend-1.mp4?v=17"
+                   poster="assets/img/work-bend-1.jpg?v=17"
                    muted playsinline preload="none"
                    disablepictureinpicture disableremoteplayback
                    aria-hidden="true" tabindex="-1"></video>
           </span>
           <figcaption class="work__caption">
-            <span class="work__caption-title">On Location</span>
-            <span class="work__caption-body">Boots on the ground, locally or abroad. Assessing complex situations and opportunities in person.</span>
+            <span class="work__caption-year">2025</span>
+            <span class="work__caption-title">The Bend</span>
+            <span class="work__caption-body">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</span>
           </figcaption>
         </figure>
 
         <figure class="work__item" data-work>
           <span class="work__frame">
             <video class="work__video" data-work-video
-                   data-src="assets/video/work-close-1.mp4?v=16"
-                   poster="assets/img/work-close-1.jpg?v=16"
+                   data-src="assets/video/work-close-1.mp4?v=17"
+                   poster="assets/img/work-close-1.jpg?v=17"
                    muted playsinline preload="none"
                    disablepictureinpicture disableremoteplayback
                    aria-hidden="true" tabindex="-1"></video>
           </span>
           <figcaption class="work__caption">
-            <span class="work__caption-title">Private Sessions</span>
-            <span class="work__caption-body">Confidential coaching and consulting from the passenger seat. No fixed location, no limitations.</span>
+            <span class="work__caption-year">2026</span>
+            <span class="work__caption-title">Close Quarters</span>
+            <span class="work__caption-body">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</span>
           </figcaption>
         </figure>
 
@@ -264,6 +275,54 @@
            visitor is never shown arrows that cannot do anything. -->
       <div class="work__nav" data-work-nav hidden></div>
 
+    </div>
+  </section>
+
+  <!-- ==================== TICKER ====================
+       A slow drift on its own; scrolling drives it faster and smears it, so
+       the strip reads as speed rather than decoration. The list is duplicated
+       once so the loop has something to wrap onto — JS keeps adding copies
+       until the track is wider than the viewport, so nothing to maintain here
+       beyond the first list.
+
+       Terms come from the hero tagline; keep them to what is actually on
+       offer. -->
+  <section class="ticker" aria-hidden="true" data-ticker>
+    <div class="ticker__track" data-ticker-track>
+      <ul class="ticker__list" data-ticker-list>
+        <li>Business Scaling</li>
+        <li>Crisis Navigation</li>
+        <li>On-Location Scouting</li>
+        <li>Representation</li>
+        <li>Immersive Sessions</li>
+        <li>Boots On The Ground</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ==================== FIGURES ====================
+       Each number scrambles through digits before settling, once, as it
+       scrolls in.
+
+       PLACEHOLDER NUMBERS — 4 and 7 are counted off the About copy below
+       (regions worked recently; the settings listed for a session). 20 is a
+       rounding of "nearly two decades" and wants confirming. Replace any of
+       them by editing data-count-to and the label; nothing else needs to
+       change. Do not add a number that cannot be backed up. -->
+  <section class="section figures" data-reveal>
+    <div class="shell figures__grid">
+      <p class="figure">
+        <span class="figure__num" data-count-to="20">20</span>
+        <span class="figure__label">Years In Practice</span>
+      </p>
+      <p class="figure">
+        <span class="figure__num" data-count-to="4">4</span>
+        <span class="figure__label">Regions Worked Recently</span>
+      </p>
+      <p class="figure">
+        <span class="figure__num" data-count-to="7">7</span>
+        <span class="figure__label">Settings We Work In</span>
+      </p>
     </div>
   </section>
 
