@@ -272,7 +272,7 @@
 
 .hero-tagline strong { color: var(--gold-400); font-style: normal; }
 .hero-tagline em { color: var(--cyan-400); font-style: normal; }
-.hero-tagline sub { color: var(--green-400); font-style: normal;}
+.hero-tagline sub { color: var(--red-700); font-style: normal;}
 
 /* ---- Motion preference --------------------------------------------------
    Everything above is decorative. Switch all of it off rather than merely
