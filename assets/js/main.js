@@ -811,22 +811,11 @@
      ---------------------------------------------------------------------- */
 
   function initWork() {
+    var group = document.querySelector("[data-work-group]");
     var items = document.querySelectorAll("[data-work]");
-    if (!items.length) return;
+    if (!group || !items.length) return;
 
-    // No pointer to approach, or reduced motion asked for: leave the posters
-    // showing with their captions, and never fetch the clips.
-    if (
-      REDUCED_MOTION.matches ||
-      !window.matchMedia("(hover: hover) and (pointer: fine)").matches
-    ) {
-      Array.prototype.forEach.call(items, function (el) {
-        el.classList.add("is-static");
-      });
-      return;
-    }
-
-    var MARGIN = 150;      // how far outside the border the clip starts
+    var MARGIN = 70;      // how far outside the border the clip starts
     var EASE = 0.18;      // how hard the clip chases the cursor
     var SETTLED = 0.001;  // close enough to stop the loop
     var MIN_SEEK = 1 / 48;
@@ -841,6 +830,150 @@
         duration: 0
       };
     });
+
+    var count = tiles.length;
+    var active = 0;
+
+    /* -- carousel ---------------------------------------------------------
+       One tile centred at full size, the rest tucked behind it at either
+       side. Rotating only re-assigns those roles; the movement itself is the
+       CSS transition on .work__item, so position, scale, blur and opacity
+       all travel together on one curve.
+
+       This runs whatever the pointer is. Rotating is a deliberate act — a
+       tap works as well as a click — so unlike the cursor scrub below it is
+       not gated behind a fine pointer. */
+
+    group.classList.add("work--carousel");
+
+    // The stage is absolutely positioned, so it has no height of its own.
+    // Measured from the frame and the tallest caption rather than from the
+    // tiles: the tiles are given this height, so reading it back off them
+    // would only ever return what was set last time. The tallest caption
+    // wins so the section does not resize as a longer one rotates in.
+    function measure() {
+      var frame = tiles[0].el.querySelector(".work__frame");
+      var frameH = frame ? frame.offsetHeight : 0;
+      if (!frameH) return;
+
+      var capH = 0;
+      for (var i = 0; i < count; i++) {
+        var cap = tiles[i].el.querySelector(".work__caption");
+        if (cap && cap.offsetHeight > capH) capH = cap.offsetHeight;
+      }
+
+      group.style.setProperty("--stage-h", frameH + capH - 2 + "px");
+      group.style.setProperty("--lift", capH / 2 + "px");
+    }
+
+    function apply() {
+      for (var i = 0; i < count; i++) {
+        var step = (i - active + count) % count;
+        var el = tiles[i].el;
+        var isCenter = step === 0;
+        var isRight = step === 1;
+        var isLeft = !isRight && step === count - 1;
+
+        el.classList.toggle("is-center", isCenter);
+        el.classList.toggle("is-side", !isCenter);
+        el.classList.toggle("is-right", isRight);
+        el.classList.toggle("is-left", isLeft);
+        // Any fourth or later tile waits behind the centre rather than
+        // stacking on a side that is already occupied.
+        el.classList.toggle("is-back", !isCenter && !isRight && !isLeft);
+
+        // A tile behind another is decoration, not a target.
+        el.setAttribute("aria-hidden", isCenter ? "false" : "true");
+      }
+      if (countEl) {
+        countEl.innerHTML = "<b>" + (active + 1) + "</b> / " + count;
+      }
+      wake();
+    }
+
+    function go(delta) {
+      active = (active + delta + count) % count;
+      apply();
+    }
+
+    /* -- controls ---------------------------------------------------------
+       Written from JS so a visitor without it is never shown arrows that
+       cannot move anything. */
+
+    var nav = document.querySelector("[data-work-nav]");
+    var countEl = null;
+
+    if (nav) {
+      nav.innerHTML =
+        '<button class="work__arrow" type="button" data-work-prev aria-label="Previous piece of work">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8"/></svg></button>' +
+        '<p class="work__count" data-work-count aria-live="polite"></p>' +
+        '<button class="work__arrow" type="button" data-work-next aria-label="Next piece of work">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg></button>';
+      nav.hidden = false;
+      countEl = nav.querySelector("[data-work-count]");
+
+      nav.querySelector("[data-work-prev]").addEventListener("click", function () {
+        go(-1);
+      });
+      nav.querySelector("[data-work-next]").addEventListener("click", function () {
+        go(1);
+      });
+
+      // Arrow keys work once either button has been used, which is the point
+      // at which someone is driving the carousel rather than reading past it.
+      nav.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowLeft") { event.preventDefault(); go(-1); }
+        else if (event.key === "ArrowRight") { event.preventDefault(); go(1); }
+      });
+    }
+
+    // Drag or swipe across the stage. The threshold keeps a click from
+    // registering as a flick.
+    var dragX = null;
+    var swiped = false;
+
+    group.addEventListener("pointerdown", function (event) {
+      dragX = event.clientX;
+      swiped = false;
+    }, { passive: true });
+
+    group.addEventListener("pointerup", function (event) {
+      if (dragX === null) return;
+      var dx = event.clientX - dragX;
+      dragX = null;
+      if (Math.abs(dx) > 40) {
+        // A swipe that began on a side tile would otherwise rotate once for
+        // the swipe and again for the click it turns into.
+        swiped = true;
+        go(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+
+    // Clicking a tile at either side brings it to the centre.
+    tiles.forEach(function (tile, i) {
+      tile.el.addEventListener("click", function () {
+        if (swiped || i === active) return;
+        active = i;
+        apply();
+      });
+    });
+
+    apply();
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+    // Web fonts land after first paint and change the caption's height.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(measure);
+    }
+
+    /* -- cursor scrub ------------------------------------------------------
+       Only the centred tile scrubs. The others are scaled down and blurred,
+       so seeking them every frame would buy nothing visible. */
+
+    var scrub =
+      !REDUCED_MOTION.matches &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
     var px = -99999;
     var py = -99999;
@@ -875,14 +1008,17 @@
 
       for (var i = 0; i < tiles.length; i++) {
         var t = tiles[i];
-        t.target = progressFor(t);
+        // A tile at either side is scaled down and blurred; scrubbing it
+        // would cost a seek a frame and show nothing. Off-centre tiles run
+        // back to their first frame instead.
+        t.target = i === active ? progressFor(t) : 0;
         t.eased += (t.target - t.eased) * EASE;
 
         var settled = Math.abs(t.target - t.eased) < SETTLED;
         if (settled) t.eased = t.target;
         else busy = true;
 
-        t.el.classList.toggle("is-near", t.target > 0);
+        t.el.classList.toggle("is-near", i === active && t.target > 0);
 
         if (t.ready && t.duration) {
           var time = t.eased * t.duration;
@@ -906,6 +1042,17 @@
       if (running) return;
       running = true;
       window.requestAnimationFrame(tick);
+    }
+
+    // No pointer to approach with, or reduced motion asked for: the carousel
+    // above still rotates, but nothing scrubs and no clip is fetched. Marking
+    // the videos ready lets their posters show — without it the frames sit
+    // empty waiting for a scrub that will never come.
+    if (!scrub) {
+      tiles.forEach(function (t) {
+        if (t.video) t.video.classList.add("is-ready");
+      });
+      return;
     }
 
     window.addEventListener(

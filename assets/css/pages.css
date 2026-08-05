@@ -272,7 +272,6 @@
 
 .hero-tagline strong { color: var(--gold-400); font-style: normal; }
 .hero-tagline em { color: var(--cyan-400); font-style: normal; }
-.hero-tagline sub { color: var(--red-700); font-style: normal;}
 
 /* ---- Motion preference --------------------------------------------------
    Everything above is decorative. Switch all of it off rather than merely
@@ -458,6 +457,175 @@
   margin: 0;
 }
 
+/* ---- Work carousel ------------------------------------------------------
+   JS adds .work--carousel. Without it the grid above stands, so a visitor
+   with no JavaScript still gets all three tiles, stacked and readable.
+
+   Three tiles, three roles: the active one centred at full size and sharp,
+   the other two tucked behind it at either side — scaled down, blurred and
+   dimmed. Rotating re-assigns the roles and every tile moves at once on one
+   curve, so position, scale, blur and opacity all land on the same beat.
+
+   The stage is a fixed height set by JS from the tallest tile, so a caption
+   two lines longer than its neighbours does not resize the section as it
+   rotates through the centre. */
+
+.work--carousel {
+  display: block;
+  position: relative;
+  height: var(--stage-h, 32rem);
+  /* Layout width of every tile is identical — only the visual scale differs.
+     That keeps the JS height measurement honest for all three. */
+  --tile-w: min(52%, 38rem);
+  --side-scale: 0.58;
+  --side-x: 16%;
+}
+
+.work--carousel .work__item {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  width: var(--tile-w);
+  /* Every tile the same height, so the lift below is one number rather than
+     one per caption length. */
+  height: var(--stage-h, 32rem);
+  transform: translateX(-50%) scale(1);
+  transition:
+    inset-inline-start var(--dur-carousel) var(--ease-carousel),
+    transform var(--dur-carousel) var(--ease-carousel),
+    scale var(--dur-carousel) var(--ease-carousel),
+    filter var(--dur-carousel) var(--ease-carousel),
+    opacity var(--dur-carousel) var(--ease-carousel);
+  will-change: transform, filter, opacity;
+}
+
+/* Scaling a tile shrinks its invisible caption along with its frame, which
+   drops the frame lower than the centred one by half the space the caption
+   gave up. --lift (set by JS, in px) is that half; multiplying by how much
+   the tile actually shrank puts every frame on the same centre line. */
+.work--carousel .work__item.is-side,
+.work--carousel .work__item.is-back {
+  transform:
+    translateX(-50%)
+    translateY(calc((1 - var(--side-scale)) * var(--lift, 0px) * -1))
+    scale(var(--side-scale));
+}
+
+.work--carousel .work__item.is-side {
+  z-index: 1;
+  filter: blur(2px);
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.work--carousel .work__item.is-left { inset-inline-start: var(--side-x); }
+.work--carousel .work__item.is-right { inset-inline-start: calc(100% - var(--side-x)); }
+
+.work--carousel .work__item.is-center {
+  z-index: 2;
+  filter: none;
+  opacity: 1;
+}
+
+.work--carousel .work__item.is-side:hover {
+  opacity: 0.95;
+  filter: blur(1px);
+}
+
+/* Only the centred tile captions itself. A caption scaled to 0.58 and blurred
+   is decoration rather than text, and two more of them competing with the
+   real one is noise. */
+.work--carousel .work__caption {
+  opacity: 0;
+  transform: translateY(14px);
+  /* Short, so the outgoing caption is gone well before the incoming one
+     arrives. Crossfading them instead left two captions on screen at once,
+     at different sizes, reading over each other. */
+  transition: opacity 200ms var(--ease-carousel), transform 200ms var(--ease-carousel);
+}
+
+.work--carousel .work__item.is-center .work__caption {
+  opacity: 1;
+  transform: translateY(0);
+  /* Held until the tile has nearly finished travelling, so the caption
+     settles onto a tile that has stopped moving. */
+  transition-delay: 380ms;
+}
+
+/* ---- Carousel controls -------------------------------------------------- */
+
+.work__nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-m);
+  margin-block-start: var(--space-l);
+}
+
+.work__arrow {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+  border: 2px solid var(--edge);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), background-color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+
+.work__arrow svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.work__arrow:hover {
+  transform: scale(1.08);
+  border-color: var(--edge-bright);
+  background: color-mix(in oklab, var(--edge) 14%, transparent);
+}
+
+.work__arrow:active { transform: scale(0.98); }
+
+/* Count sits between the arrows so rotating always has a readable result,
+   including for anyone driving it from the keyboard. */
+.work__count {
+  min-width: 4.5ch;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--step-0);
+  letter-spacing: var(--track-snug);
+  color: var(--text-soft);
+}
+
+.work__count b { color: var(--edge); font-weight: inherit; }
+
+/* --side-x has to clear half a scaled side tile, or the outer one runs past
+   the viewport and the page scrolls sideways. */
+@media (max-width: 64rem) {
+  .work--carousel { --tile-w: 64%; --side-scale: 0.52; --side-x: 15%; }
+}
+
+@media (max-width: 40rem) {
+  .work--carousel { --tile-w: 70%; --side-scale: 0.4; --side-x: 15%; }
+  .work__arrow { width: 3rem; height: 3rem; }
+}
+
+/* Rotating is a deliberate act, so it still works — it just stops sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .work--carousel .work__item { transition: none; will-change: auto; }
+  .work__arrow { transition: none; }
+}
+
 /* The frame clips the push, so the photograph grows within its border rather
    than pressing past it. */
 .work__frame {
@@ -526,12 +694,14 @@
   color: var(--text-soft);
 }
 
-/* No pointer to approach, or reduced motion asked for: the tiles sit still
-   and the captions are simply there. JS adds this class. */
-.work__item.is-static .work__caption {
-  opacity: 1;
-  transform: none;
-  transition: none;
+/* A fourth or later tile waits behind the centre rather than crowding a side
+   that is already taken. Three tiles never reach this state; it exists so
+   adding a fourth does not need the layout rethought. */
+.work--carousel .work__item.is-back {
+  z-index: 0;
+  scale: 0.8;
+  filter: blur(4px);
+  opacity: 0.7;
 }
 
 /* ---- Inner page masthead ------------------------------------------------

@@ -29,16 +29,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Inter:wght@400;500;600&display=swap">
 
 <!-- Load order matters: tokens defines the variables everything else reads. -->
-<link rel="stylesheet" href="assets/css/tokens.css?v=15">
-<link rel="stylesheet" href="assets/css/base.css?v=15">
-<link rel="stylesheet" href="assets/css/layout.css?v=15">
-<link rel="stylesheet" href="assets/css/components.css?v=15">
-<link rel="stylesheet" href="assets/css/pages.css?v=15">
+<link rel="stylesheet" href="assets/css/tokens.css?v=16">
+<link rel="stylesheet" href="assets/css/base.css?v=16">
+<link rel="stylesheet" href="assets/css/layout.css?v=16">
+<link rel="stylesheet" href="assets/css/components.css?v=16">
+<link rel="stylesheet" href="assets/css/pages.css?v=16">
 
 <!-- Set before first paint so reveal elements start hidden without a flash.
      With JS off the class is never added and everything renders visible. -->
 <script>document.documentElement.classList.add("js");</script>
-<script src="assets/js/main.js?v=15" defer></script>
+<script src="assets/js/main.js?v=16" defer></script>
 <!--/#HEAD-->
 </head>
 
@@ -207,13 +207,17 @@
         <h2>Out On The Road</h2>
       </header>
 
-      <div class="work" data-reveal-group>
+      <!-- data-reveal sits on the container, not the tiles: the reveal and the
+           carousel both animate transform, and on the same element the second
+           one to run wins. Revealing the stage as a unit leaves each tile's
+           transform to the carousel alone. -->
+      <div class="work" data-work-group data-reveal>
 
-        <figure class="work__item" data-work data-reveal>
+        <figure class="work__item" data-work>
           <span class="work__frame">
             <video class="work__video" data-work-video
-                   data-src="assets/video/work-wide-1.mp4?v=15"
-                   poster="assets/img/work-wide-1.jpg?v=15"
+                   data-src="assets/video/work-wide-1.mp4?v=16"
+                   poster="assets/img/work-wide-1.jpg?v=16"
                    muted playsinline preload="none"
                    disablepictureinpicture disableremoteplayback
                    aria-hidden="true" tabindex="-1"></video>
@@ -224,11 +228,11 @@
           </figcaption>
         </figure>
 
-        <figure class="work__item" data-work data-reveal>
+        <figure class="work__item" data-work>
           <span class="work__frame">
             <video class="work__video" data-work-video
-                   data-src="assets/video/work-bend-1.mp4?v=15"
-                   poster="assets/img/work-bend-1.jpg?v=15"
+                   data-src="assets/video/work-bend-1.mp4?v=16"
+                   poster="assets/img/work-bend-1.jpg?v=16"
                    muted playsinline preload="none"
                    disablepictureinpicture disableremoteplayback
                    aria-hidden="true" tabindex="-1"></video>
@@ -239,11 +243,11 @@
           </figcaption>
         </figure>
 
-        <figure class="work__item" data-work data-reveal>
+        <figure class="work__item" data-work>
           <span class="work__frame">
             <video class="work__video" data-work-video
-                   data-src="assets/video/work-close-1.mp4?v=15"
-                   poster="assets/img/work-close-1.jpg?v=15"
+                   data-src="assets/video/work-close-1.mp4?v=16"
+                   poster="assets/img/work-close-1.jpg?v=16"
                    muted playsinline preload="none"
                    disablepictureinpicture disableremoteplayback
                    aria-hidden="true" tabindex="-1"></video>
@@ -255,6 +259,11 @@
         </figure>
 
       </div>
+
+      <!-- Written by JS only when the carousel is actually built, so a no-JS
+           visitor is never shown arrows that cannot do anything. -->
+      <div class="work__nav" data-work-nav hidden></div>
+
     </div>
   </section>
 

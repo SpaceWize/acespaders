@@ -154,6 +154,13 @@
   --dur: 340ms;
   --dur-slow: 720ms;
 
+  /* The work carousel moves four properties at once — position, scale, blur
+     and opacity — and they only read as one motion if they share a curve.
+     Slower than --dur so the travel is legible, and a symmetric ease so the
+     tile arrives without the late snap --ease has. */
+  --dur-carousel: 650ms;
+  --ease-carousel: cubic-bezier(0.4, 0, 0.2, 1);
+
   /* ---- Layering ----------------------------------------------------------
      Named z-indexes so stacking never becomes a guessing game. */
   --z-header: 100;
